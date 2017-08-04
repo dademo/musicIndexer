@@ -1,6 +1,6 @@
 # musicIndexer
 
-A rpogram which indexes music with their tag, and store it into a database.
+A program which indexes music with their tag, and store it into a database.
 
 Using libraries :
   -**SQLite** (database)
