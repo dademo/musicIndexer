@@ -11,39 +11,47 @@ int createTables(sqlite3* db)
 
 	const char* err;	// Uncompiled part
 
-	std::string tablesRequest[5] = {"\
+	std::string tablesRequest[6] = {"\
 CREATE TABLE IF NOT EXISTS \"albums\" (\n\
-	`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,\n\
+	`id`		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,\n\
 	`artist`	INTEGER,\n\
-	`name`	TEXT,\n\
-	`ntrack`	INTEGER,\n\
-	`cover`	BLOB,\n\
-	`year`	INTEGER\n\
-);\n",
+	`name`		TEXT,\n\
+	`ntrack`	INTEGER	/*Number of tracks in the album*/,\n\
+	`year`		TEXT\n\
+);",
 "CREATE TABLE IF NOT EXISTS \"genres\" (\n\
 	`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,\n\
 	`name`	TEXT\n\
-);\n",
+);",
 "CREATE TABLE IF NOT EXISTS \"artists\" (\n\
 	`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,\n\
 	`name`	TEXT\n\
-);\n",
+);",
 "CREATE TABLE IF NOT EXISTS \"directories\" (\n\
 	`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,\n\
 	`path`	TEXT\n\
-);\n",
+);",
 "CREATE TABLE IF NOT EXISTS \"songs\" (\n\
-	`id`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,\n\
+	`id`		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,\n\
 	`id_album`	INTEGER	/*Foreign key for table album->id*/,\n\
 	`id_genre`	INTEGER	/*Foreign key for table genre->id*/,\n\
 	`id_artist`	INTEGER	/*Foreign key for table artist->id*/,\n\
 	`id_dirName`	INTEGER	/*Foreign key for table dirname->id*/,\n\
-	`path`	TEXT		/*Name of the file*/,\n\
-	`name`	TEXT		/*Name of the track*/,\n\
-	`tracknbr`	INTEGER	/*Number of tracks*/\n\
+	`path`		TEXT	/*Name of the file*/,\n\
+	`name`		TEXT	/*Name of the track*/,\n\
+	`tracknbr`	INTEGER	/*Number of tracks*/,\n\
+	`comment`	TEXT	/*Comment of the track*/\n\
+);",
+"CREATE TABLE IF NOT EXISTS \"audioProperties\" (\n\
+	`id`		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,\n\
+	`id_song`	INTEGER	/*Foreign key for table songs->id*/,\n\
+	`length`	INTEGER	/*Length of the music in seconds*/,\n\
+	`bitrate`	INTEGER	/*Bitrate in kb/s*/,\n\
+	`sampleRate`	INTEGER	/*Sample rate in Hz*/,\n\
+	`channels`	INTEGER	/*Number of audio channels*/\n\
 );" };
 
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < 6; i++)
 	{
 		// Creating the request
 		returnVal = sqlite3_prepare_v2(db, tablesRequest[i].c_str(), -1, &requestStatement, &err);
@@ -84,14 +92,13 @@ void resetTable(sqlite3* db, std::string tableName);
 void checkTables(sqlite3* db)
 {
 	int colResult = 0;
-	struct colInfo allCols[][8] = {
+	struct colInfo allCols[][9] = {
 	{	// Albums table
 		{"id", SQLITE_INTEGER, true},
 		{"artist", SQLITE_INTEGER, false},
 		{"name", SQLITE_TEXT, false},
 		{"ntrack", SQLITE_INTEGER, false},
-		{"cover", SQLITE_BLOB, false},
-		{"year", SQLITE_INTEGER, false}
+		{"year", SQLITE_TEXT, false}
 	},{	// Artists table
 		{"id", SQLITE_INTEGER, true},
 		{"name", SQLITE_TEXT, false}
@@ -109,7 +116,15 @@ void checkTables(sqlite3* db)
 		{"id_dirName", SQLITE_INTEGER, false},
 		{"path", SQLITE_TEXT,false},
 		{"name", SQLITE_TEXT, false},
-		{"tracknbr", SQLITE_INTEGER, false}
+		{"tracknbr", SQLITE_INTEGER, false},
+		{"comment", SQLITE_TEXT, false}
+	},{
+		{"id", SQLITE_INTEGER, true },
+		{"id_song", SQLITE_INTEGER, false },
+		{"length", SQLITE_INTEGER, false },
+		{"bitrate", SQLITE_INTEGER, false },
+		{"sampleRate", SQLITE_INTEGER, false },
+		{"channels", SQLITE_INTEGER, false }
 	}};
 
 	std::string allTablesNames[] = {
@@ -117,11 +132,12 @@ void checkTables(sqlite3* db)
 	"artists",
 	"directories",
 	"genres",
-	"songs"
+	"songs",
+	"audioProperties"
 	};
-	int elemCount[] = {6,2,2,2,8};
+	int elemCount[] = {5,2,2,2,9,6};
 
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < 6; i++)
 	{
 		colResult = checkTablecolsNames(db, allTablesNames[i], elemCount[i], allCols[i]);
 		if(colResult > 0) { std::cout << "Error n°" << colResult << std::endl; resetTable(db, allTablesNames[i]); }
@@ -168,6 +184,8 @@ int checkTablecolsNames(sqlite3* db, std::string tableName, int nCol, struct col
 	}
 
 	sqliteReturnVal(sqlite3_finalize(requestStatement), 0);
+
+	if(i != nCol)	{ return -i-100; }
 
 	return 0;
 }
