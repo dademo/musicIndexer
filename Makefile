@@ -5,7 +5,7 @@
 CC=gcc
 CFLAGS=--std=c11 -pthread -ldl -W -Wall -pedantic
 CXXFLAGS=--std=c++11 -lstdc++ -pthread -ldl -ltag -W -Wall -pedantic
-EXEC=sqliteTest
+EXEC=musicIndexer
 
 RED	=	"\e[1;31m"
 WHITE	=	"\e[0m"
