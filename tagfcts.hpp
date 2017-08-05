@@ -64,14 +64,16 @@ public:
 
 	// Special functions
 	bool sync(sqlite3* db);	// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
-	bool insertArtist(sqlite3* db);
-	bool insertAlbum(sqlite3* db);
+	bool insertPath(sqlite3* db);	// Adding the directories_path and songs_path values to the database
+	bool insertArtist(sqlite3* db);	// Adding the songs_artists_name and albums_artist name
+	bool insertAlbum(sqlite3* db);	// Adding the albums_name,albums_artist(int),albums_ntracks,albums_year to the database
 	std::string toString();
 
 	int getArtistId(sqlite3* db, std::string artistName);
 
-	bool compareArtist(sqlite3* db);
-	bool compareAlbum(sqlite3* db);
+	bool checkPath(sqlite3* db);	// Checing if the path exists in the database
+	bool compareArtist(sqlite3* db);// If the artist (album and song) exists in the databse
+	bool compareAlbum(sqlite3* db);	// If the album exists in the database
 
 private:
 	// Database tags fields
