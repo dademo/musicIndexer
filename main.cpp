@@ -38,6 +38,9 @@ int main (int argc, char* argv[])
 
 		std::cout << maMusique.toString() << std::endl;
 
+
+		maMusique.sync(db);
+
 		sqlite3_close(db);
 
 		return 0;
