@@ -58,8 +58,12 @@ int sqliteReturnVal(int returnVal, const char* err)
 	case SQLITE_NOMEM:
 		std::cerr << "SQLite3 can't allocate memory... Aborting" << std::endl;
 		return SQLITE_NOMEM;
+        /* Request errors */
+	case SQLITE_RANGE:
+		std::cerr << "sqlite3_bind out of range OR sqlite3_column out of range... Aborting" << std::endl;
+		return SQLITE_RANGE;
 	default:
-		std::cerr << "Untreated value" << std::endl;
+		std::cerr << "Untreated value (" + std::to_string(returnVal) + ")" << std::endl;
 		return returnVal;
 	}
 }
