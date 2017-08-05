@@ -273,6 +273,46 @@ int TagInfos::getArtistId(sqlite3* db, std::string artistName)
 	return artistId;
 }
 
+
+bool TagInfos::checkPath(sqlite3* db)
+{
+	sqlite3_stmt* requestStatement;
+	int returnVal = 0;
+	int i = 0;
+
+	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
+SELECT directories.path,songs.path \
+FROM directories,songs \
+WHERE directories.path=? AND songs.path=? \
+	AND  songs.id_dirName=directories.id", -1, &requestStatement, 0), 0);
+
+	if(returnVal != SQLITE_OK) { return false; }
+
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, m_directories_path.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 2, m_songs_path.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+
+	do{
+		returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
+		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_DONE && returnVal != SQLITE_BUSY) { return false; }
+		if(returnVal != SQLITE_DONE)
+		{
+			if(m_albums_name != std::string((char*)sqlite3_column_text(requestStatement, 0)))
+			{ return false; }
+			if(m_albums_artist != std::string((char*)sqlite3_column_text(requestStatement, 1)))
+			{ return false; }
+			i++;
+		}
+
+	} while (returnVal != SQLITE_DONE);
+
+	if(i == 0)	// No result
+	{ return false; }
+
+	sqliteReturnVal(sqlite3_finalize(requestStatement), 0);
+
+	return true;
+}
+
 bool TagInfos::compareArtist(sqlite3* db)	// true -> OK
 {
 	// Single artist
@@ -387,3 +427,4 @@ bool TagInfos::compareAlbum(sqlite3* db)	// true -> OK
 
 	return true;
 }
+
