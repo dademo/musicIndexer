@@ -45,6 +45,7 @@ public:
 	std::string	songs_name,
 	std::string	songs_artists_name,
 	int		songs_tracknbr,
+	std::string	songs_comment,
 	std::string	songs_path,
 	int		length,
 	int		bitrate,
@@ -63,7 +64,14 @@ public:
 
 	// Special functions
 	bool sync(sqlite3* db);	// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
+	bool insertArtist(sqlite3* db);
+	bool insertAlbum(sqlite3* db);
 	std::string toString();
+
+	int getArtistId(sqlite3* db, std::string artistName);
+
+	bool compareArtist(sqlite3* db);
+	bool compareAlbum(sqlite3* db);
 
 private:
 	// Database tags fields
@@ -80,6 +88,7 @@ private:
 	std::string	m_songs_name			= "";
 	std::string	m_songs_artists_name		= "";	// With foreign key songs.id_artist	--> artist of this song
 	int		m_songs_tracknbr		= 0;
+	std::string	m_songs_comment			= "";
 	std::string	m_songs_path			= "";
 		// audioProperties table
 	int		m_audioProperties_length	= 0;
