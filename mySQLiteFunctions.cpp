@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 
 #include "sqlite3.h"
 #include "mySQLiteFunctions.hpp"
@@ -15,7 +16,7 @@ int sqliteReturnVal(int returnVal, const char* err)
 		return SQLITE_DONE;
 		/* Execution error */
 	case SQLITE_ERROR:
-		std::cerr << "Error reported (" << err << ")... Aborting" << std::endl;
+		std::cerr << "Error reported" << ((err != 0)? std::string(" (") + err + ")": "") << "... Aborting" << std::endl;
 		return SQLITE_ERROR;
 	case SQLITE_ABORT:
 		std::cerr << "General error... Operation aborted" << std::endl;
@@ -66,4 +67,36 @@ int sqliteReturnVal(int returnVal, const char* err)
 		std::cerr << "Untreated value (" + std::to_string(returnVal) + ")" << std::endl;
 		return returnVal;
 	}
+}
+
+
+int idResearch(sqlite3* db, std::string dbName, std::string paramName, std::string paramValue)
+{
+	sqlite3_stmt* requestStatement;
+	int returnVal = 0;
+	int id = 0;
+	std::string request = "\
+	SELECT " + dbName + ".id \
+	FROM " + dbName + " \
+	WHERE " + dbName + "." + paramName + "=?";
+
+	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, request.c_str(), -1, &requestStatement, 0), 0);
+ 
+	if(returnVal != SQLITE_OK) { return -1; }
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, paramValue.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return -1; };
+
+	do{
+		returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
+		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_DONE && returnVal != SQLITE_BUSY) { return -1; }
+		if(returnVal == SQLITE_ROW)
+		{
+			id = sqlite3_column_int(requestStatement, 0);
+		}
+		if(returnVal == SQLITE_BUSY) { sleep(1); }
+
+	} while (returnVal != SQLITE_DONE);
+
+	sqliteReturnVal(sqlite3_finalize(requestStatement), 0);
+
+	return id;
 }
