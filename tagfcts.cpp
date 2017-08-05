@@ -1,10 +1,12 @@
 #include <iostream>
 #include <string>
+#include "sqlite3.h"
 #include <taglib/taglib.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 #include <taglib/oggflacfile.h>
 
+#include "mySQLiteFunctions.hpp"
 #include "tagfcts.hpp"
 
 TagInfos::TagInfos(
@@ -17,6 +19,7 @@ TagInfos::TagInfos(
 	std::string	songs_name,
 	std::string	songs_artists_name,
 	int		songs_tracknbr,
+	std::string	songs_comment,
 	std::string	songs_path,
 	int		length,
 	int		bitrate,
@@ -32,6 +35,7 @@ TagInfos::TagInfos(
 	m_songs_name(songs_name),
 	m_songs_artists_name(songs_artists_name),
 	m_songs_tracknbr(songs_tracknbr),
+	m_songs_comment(songs_comment),
 	m_songs_path(songs_path),
 	m_audioProperties_length(length),
 	m_audioProperties_bitrate(bitrate),
@@ -70,6 +74,7 @@ TagInfos::TagInfos(TagLib::FileRef targetFile)
 			if( it->first == "TITLE" ) { m_songs_name = it->second.toString().to8Bit(true); }
 			if( it->first == "ARTIST" ) { m_songs_artists_name = it->second.toString().to8Bit(true); }
 			if( it->first == "TRACKNUMBER" ) { m_songs_tracknbr = std::stoi(it->second.toString().to8Bit(true)); }
+			if( it->first == "COMMENT" ) { m_songs_comment = it->second.toString().to8Bit(true); }
 			//std::cout << it->first << " <> " << it->second << std::endl;
 		}
 
@@ -127,8 +132,258 @@ std::string TagInfos::toString()
 	toReturn += "\tGenre : " + m_genres_name + "\n";
 	toReturn += "\tTrack n°" + std::to_string(m_songs_tracknbr) + "/" + std::to_string(m_albums_ntracks) + "\n";
 	toReturn += "\tDate : " + m_albums_year + "\n";
+	toReturn += "\tComment : " + m_songs_comment + "\n";
 	toReturn += "\tPath : " +  m_directories_path + "/" + m_songs_path + "\n";
 	toReturn += "\t" + std::to_string(m_audioProperties_length) + " s | " + std::to_string(m_audioProperties_bitrate) + " kb/s | " + std::to_string(m_audioProperties_samplerate) + " Hz | " + std::to_string(m_audioProperties_channels) + " channels\n";
 
 	return toReturn;
+}
+
+bool TagInfos::sync(sqlite3* db)
+{
+	sqlite3_stmt* requestStatement;
+	int returnVal = 0;
+	int i = 0;
+
+	// Request : songs.name,albums.name,artists.name, genres.name,songs.tracknbr,albums.ntrack,albums.year,songs.comment,directories.path,songs.path
+	// Request : songs.name,albums.name,artists.name, genres.name,songs.tracknbr,directories.path,songs.path
+	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
+	SELECT songs.name,albums.name,artists.name, genres.name,songs.tracknbr,directories.path,songs.path \
+	FROM songs,albums,artists,directories,genres \
+	WHERE songs.name=? AND albums.name=? AND genres.name=? AND songs.tracknbr=? AND directories.path=? AND songs.path=? \
+		AND  songs.id_album=albums.id AND songs.id_genre=genres.id AND songs.id_artist=artists.name AND songs.id_dirName=directories.path", -1, &requestStatement, 0), 0);
+	if(returnVal != SQLITE_OK) { return false; }
+
+
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, m_songs_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 2, m_albums_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 3, m_genres_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 3, m_songs_tracknbr), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 4, m_directories_path.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 5, m_songs_path.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+
+	do{
+		returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
+		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_DONE) { return false; }
+		if(returnVal != SQLITE_DONE) { i++; }
+
+	} while (returnVal != SQLITE_DONE);
+
+	sqliteReturnVal(sqlite3_finalize(requestStatement), 0);
+
+
+	if(i == 0)	// Sync necessary
+	{
+		if(!compareArtist(db)) { std::cout << "Artist not found, adding..." << std::endl; insertArtist(db); }
+		if(!compareAlbum(db)) { std::cout << "Album not found, adding..." << std::endl; insertAlbum(db); }
+	}
+
+	return true;
+}
+
+bool TagInfos::insertArtist(sqlite3* db)
+{
+	sqlite3_stmt* requestStatement;
+	int returnVal = 0;
+
+	if(m_songs_artists_name == m_albums_artist)	// The same artist
+	{
+		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO artists(name) VALUES (?)", -1, &requestStatement, 0), 0);
+
+		if(returnVal != SQLITE_OK) { return false; }
+
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, m_songs_artists_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+	}
+	else
+	{
+		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO artists(name) VALUES (?),(?)", -1, &requestStatement, 0), 0);
+
+		if(returnVal != SQLITE_OK) { return false; }
+
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, m_songs_artists_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 2, m_albums_artist.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+	}
+
+	do{
+		returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
+		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_DONE && returnVal != SQLITE_BUSY) { return false; }
+
+	} while (returnVal != SQLITE_DONE);
+
+	sqlite3_finalize(requestStatement);
+	return true;
+}
+
+bool TagInfos::insertAlbum(sqlite3* db)
+{
+	if(compareArtist(db))
+	{
+		sqlite3_stmt* requestStatement;
+		int returnVal = 0;
+		int artistId = getArtistId(db, m_albums_artist);
+
+		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO albums(id_artist, name, nTrack, year) VALUES (?,?,?,?)", -1, &requestStatement, 0), 0);
+
+		if(returnVal != SQLITE_OK) { return false; }
+
+		if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 1, artistId), 0) != SQLITE_OK) { return false; };
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 2, m_albums_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+		if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 3, m_albums_ntracks), 0) != SQLITE_OK) { return false; };
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 4, m_albums_year.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+
+		do{
+			returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
+			if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_DONE && returnVal != SQLITE_BUSY) { return false; }
+
+		} while (returnVal != SQLITE_DONE);
+
+		sqlite3_finalize(requestStatement);
+		return true;
+	}
+	else { std::cerr << "TagInfos::insertAlbum() : missing artist (compareArtist)" << std::endl; return false; }
+}
+
+int TagInfos::getArtistId(sqlite3* db, std::string artistName)
+{
+	sqlite3_stmt* requestStatement;
+	int returnVal = 0;
+	int artistId = 0;
+
+	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
+	SELECT artists.id \
+	FROM artists\
+	WHERE artists.name=?", -1, &requestStatement, 0), 0);
+ 
+	if(returnVal != SQLITE_OK) { return false; }
+
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, artistName.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+
+	do{
+		returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
+		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_DONE && returnVal != SQLITE_BUSY) { return false; }
+		if(returnVal != SQLITE_DONE)
+		{
+			artistId = sqlite3_column_int(requestStatement, 0);
+		}
+
+	} while (returnVal != SQLITE_DONE);
+
+	sqliteReturnVal(sqlite3_finalize(requestStatement), 0);
+
+	return artistId;
+}
+
+bool TagInfos::compareArtist(sqlite3* db)	// true -> OK
+{
+	// Single artist
+	if(m_songs_artists_name != "")
+	{
+		sqlite3_stmt* requestStatement;
+		int returnVal = 0;
+		int i = 0;
+
+		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
+		SELECT artists.name \
+		FROM artists\
+		WHERE artists.name=?", -1, &requestStatement, 0), 0);
+ 
+		if(returnVal != SQLITE_OK) { return false; }
+
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, m_songs_artists_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+
+		do{
+			returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
+			if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_DONE && returnVal != SQLITE_BUSY) { return false; }
+			if(returnVal != SQLITE_DONE)
+			{
+				if(m_songs_artists_name != std::string((char*)sqlite3_column_text(requestStatement, 0)))
+				{ return false; }
+				i++;
+			}
+
+		} while (returnVal != SQLITE_DONE);
+
+		if(i == 0)	// No result
+		{ return false; }
+
+		sqliteReturnVal(sqlite3_finalize(requestStatement), 0);
+	}
+
+	if(m_albums_artist != "")
+	{
+		sqlite3_stmt* requestStatement;
+		int returnVal = 0;
+		int i = 0;
+
+		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
+		SELECT artists.name \
+		FROM artists \
+		WHERE artists.name=?", -1, &requestStatement, 0), 0);
+ 
+		if(returnVal != SQLITE_OK) { return false; }
+
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, m_albums_artist.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+
+		do{
+			returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
+			if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_DONE && returnVal != SQLITE_BUSY) { return false; }
+			if(returnVal != SQLITE_DONE)
+			{
+				if(m_albums_artist != std::string((char*)sqlite3_column_text(requestStatement, 0)))
+				{ return false; }
+				i++;
+			}
+
+		} while (returnVal != SQLITE_DONE);
+
+		if(i == 0)	// No result
+		{ return false; }
+
+		sqliteReturnVal(sqlite3_finalize(requestStatement), 0);
+	}
+
+	return true;
+}
+
+bool TagInfos::compareAlbum(sqlite3* db)	// true -> OK
+{
+	if(m_albums_name != "")
+	{
+		sqlite3_stmt* requestStatement;
+		int returnVal = 0;
+		int i = 0;
+
+		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
+	SELECT albums.name,artists.name \
+	FROM albums,artists \
+	WHERE albums.name=? AND artists.name=? \
+		AND  albums.id_artist=artists.id", -1, &requestStatement, 0), 0);
+
+		if(returnVal != SQLITE_OK) { return false; }
+
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, m_albums_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 2, m_albums_artist.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+
+		do{
+			returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
+			if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_DONE && returnVal != SQLITE_BUSY) { return false; }
+			if(returnVal != SQLITE_DONE)
+			{
+				if(m_albums_name != std::string((char*)sqlite3_column_text(requestStatement, 0)))
+				{ return false; }
+				if(m_albums_artist != std::string((char*)sqlite3_column_text(requestStatement, 1)))
+				{ return false; }
+				i++;
+			}
+
+		} while (returnVal != SQLITE_DONE);
+
+		if(i == 0)	// No result
+		{ return false; }
+
+		sqliteReturnVal(sqlite3_finalize(requestStatement), 0);
+	}
+
+
+	return true;
 }
