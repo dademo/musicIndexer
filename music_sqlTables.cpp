@@ -37,7 +37,6 @@ CREATE TABLE IF NOT EXISTS \"albums\" (\n\
 	`id_genre`	INTEGER	/*Foreign key for table genre->id*/,\n\
 	`id_artist`	INTEGER	/*Foreign key for table artist->id*/,\n\
 	`id_dirName`	INTEGER	/*Foreign key for table dirname->id*/,\n\
-	`id_audioproperties`	INTEGER	/*Foreign key for table audioProperties->id*/,\n\
 	`path`		TEXT	/*Name of the file*/,\n\
 	`name`		TEXT	/*Name of the track*/,\n\
 	`tracknbr`	INTEGER	/*Number of tracks*/,\n\
@@ -93,7 +92,7 @@ void resetTable(sqlite3* db, std::string tableName);
 void checkTables(sqlite3* db)
 {
 	int colResult = 0;
-	struct colInfo allCols[][10] = {
+	struct colInfo allCols[][9] = {
 	{	// Albums table
 		{"id", SQLITE_INTEGER, true},
 		{"id_artist", SQLITE_INTEGER, false},
@@ -115,7 +114,6 @@ void checkTables(sqlite3* db)
 		{"id_genre", SQLITE_INTEGER, false},
 		{"id_artist", SQLITE_INTEGER, false},
 		{"id_dirName", SQLITE_INTEGER, false},
-		{"id_audioproperties", SQLITE_INTEGER, false},
 		{"path", SQLITE_TEXT,false},
 		{"name", SQLITE_TEXT, false},
 		{"tracknbr", SQLITE_INTEGER, false},
@@ -137,7 +135,7 @@ void checkTables(sqlite3* db)
 	"songs",
 	"audioProperties"
 	};
-	int elemCount[] = {5,2,2,2,10,6};
+	int elemCount[] = {5,2,2,2,9,6};
 
 	for(int i = 0; i < 6; i++)
 	{
