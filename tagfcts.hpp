@@ -30,6 +30,7 @@ struct audioProperties {
 	int channels;
 };
 
+std::string getFileLastExtension(std::string file);
 
 // Class that store all values from the database. It can check and update it if necessary
 class TagInfos
@@ -63,23 +64,39 @@ public:
 	std::string getFileName()	{ return m_songs_path; }
 
 	// Special functions
-	bool sync(sqlite3* db);	// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
-	bool insertPath(sqlite3* db);	// Adding the directories_path and songs_path values to the database
-	bool insertArtist(sqlite3* db);	// Adding the songs_artists_name and albums_artist name
-	bool insertAlbum(sqlite3* db);	// Adding the albums_name,albums_artist(int),albums_ntracks,albums_year to the database
+	bool sync(sqlite3* db);				// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
+	bool insertAlbum(sqlite3* db);			// Adding the albums_name,albums_artists_name(int),albums_ntracks,albums_year to the database
+	bool insertArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
+	bool insertAudioProperties(sqlite3* db);	// Adding the audio properties to the database
+	bool insertDirPath(sqlite3* db);		// Adding the directories_path to the database
+	bool insertGenre(sqlite3* db);			// Adding the genre to thje database
+	bool insertSong(sqlite3* db);			// Adding the songs to the database -> If compareSongPath return false
+	bool updateSong(sqlite3* db);	/*TODO*/	// Updating the song, if already exists but doesn't fit with the acutal datas
 	std::string toString();
 
-	int getArtistId(sqlite3* db, std::string artistName);
+	bool compareAlbum(sqlite3* db);			// If the album exists in the database
+	bool compareArtist(sqlite3* db);		// If the artist (album and song) exists in the databse
+	bool compareGenre(sqlite3* db);			// If the genre exist in the database
+	bool compareDirPath(sqlite3* db);		// Checking if the directory path exists in the database
+	bool compareSongPath(sqlite3* db);		// Checking if the file name exists in the database
+	bool compareSongData(sqlite3* db);		// If the song exist in the database with the same data
+	bool compareAudioProperties(sqlite3* db);	// Check for the presence of an audioProperty in the database
+	// if compareSongPath == true && compareSongData == false -> SQL:UPDATE
+	
 
-	bool checkPath(sqlite3* db);	// Checing if the path exists in the database
-	bool compareArtist(sqlite3* db);// If the artist (album and song) exists in the databse
-	bool compareAlbum(sqlite3* db);	// If the album exists in the database
+	// Static functions //
+	static int getAlbumId(sqlite3* db, std::string albumName);
+	static int getGenreId(sqlite3* db, std::string genreName);
+	static int getArtistId(sqlite3* db, std::string artistName);
+	static int getDirnameId(sqlite3* db, std::string dirName);
+	static int getSongId(sqlite3* db, std::string dirPath, std::string songFileName);
+
 
 private:
 	// Database tags fields
 		// albums table
 	std::string	m_albums_name			= "";	// artists table
-	std::string	m_albums_artist			= "";
+	std::string	m_albums_artists_name		= "";
 	int		m_albums_ntracks		= 0;
 	std::string	m_albums_year			= "";
 		// directories table
