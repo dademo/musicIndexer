@@ -345,11 +345,14 @@ bool TagInfos::insertSong(sqlite3* db)
 {
 	if(compareAlbum(db) && compareSongArtist(db) && compareGenre(db))
 	{
+		std::cout << "Adding " << m_albums_name << " FROM " << m_albums_name << " (" << TagInfos::getAlbumId(db, m_albums_name, m_albums_artists_name, m_albums_ntracks, m_albums_year) << ")" << std::endl; 
+
 		if(! compareDirPath(db)) { insertDirPath(db); }
 		sqlite3_stmt* requestStatement;
 		int returnVal = 0;
 
 		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO songs(id_album,id_genre,id_artist,id_dirName,path,name,tracknbr,comment) VALUES (?,?,?,?,?,?,?,?)", -1, &requestStatement, 0), 0);
+		//returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "INSERT INTO songs(id_album,id_genre,id_artist,id_dirName,path,name,tracknbr,comment) VALUES (?,?,?,?,?,?,?,?)", -1, &requestStatement, 0), 0);
 
 		if(returnVal != SQLITE_OK) { return false; }
 
@@ -379,12 +382,12 @@ bool TagInfos::updateSong(sqlite3* db)
 {
 	if(!compareDirPath(db))
 	{ insertSong(db); }
-	sqlite3_stmt* requestStatement;
+	/*sqlite3_stmt* requestStatement;
 	int returnVal = 0;
 
 	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
 UPDATE OR REPLACE songs \
-SET id_album=?,id_grenre=?,id_artist=?,name=?,tracknbr=?,comment=? \
+SET id_album=?,id_genre=?,id_artist=?,name=?,tracknbr=?,comment=? \
 WHERE id=? ", -1, &requestStatement, 0), 0);
 
 	if(returnVal != SQLITE_OK) { return false; }
@@ -392,11 +395,10 @@ WHERE id=? ", -1, &requestStatement, 0), 0);
 	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 1, TagInfos::getAlbumId(db, m_albums_name, m_albums_artists_name, m_albums_ntracks, m_albums_year)), 0) != SQLITE_OK) { return false; };
 	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 2, TagInfos::getGenreId(db, m_genres_name)), 0) != SQLITE_OK) { return false; };
 	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 3, TagInfos::getArtistId(db, m_songs_artists_name)), 0) != SQLITE_OK) { return false; };
-	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 4, TagInfos::getDirnameId(db, m_directories_path)), 0) != SQLITE_OK) { return false; };
-	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 5, m_songs_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
-	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 6, m_songs_tracknbr), 0) != SQLITE_OK) { return false; };
-	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 7, m_songs_comment.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
-	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 8, TagInfos::getSongId(db, m_directories_path, m_songs_path)), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 4, m_songs_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 5, m_songs_tracknbr), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 6, m_songs_comment.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 7, TagInfos::getSongId(db, m_directories_path, m_songs_path)), 0) != SQLITE_OK) { return false; };
 
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
@@ -405,15 +407,13 @@ WHERE id=? ", -1, &requestStatement, 0), 0);
 
 	} while (returnVal != SQLITE_DONE);
 
-	sqlite3_finalize(requestStatement);
+	sqlite3_finalize(requestStatement);*/
 	return true;
 }
 
 
 int TagInfos::getAlbumId(sqlite3* db, std::string albumName,std::string artistName, int nTracks, std::string date)
 {
-	//std::cout << "[" << albumName << "] (" << artistName << ") -> " << nTracks << " : " << date << std::endl;
-
 	sqlite3_stmt* requestStatement;
 	int returnVal = 0;
 	int id = 0;
@@ -437,6 +437,7 @@ WHERE albums.name=? AND artists.name=? AND albums.ntrack=? AND albums.year=? AND
 		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
 		if(returnVal == SQLITE_ROW)
 		{
+			std::cout << "albums.name : " << albumName << " (" << sqlite3_column_int(requestStatement,0) << ")" << std::endl;
 			id = sqlite3_column_int(requestStatement,0);
 		}
 
@@ -484,6 +485,7 @@ WHERE directories.path=? AND songs.path=? AND songs.id_dirName=directories.id", 
 		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
 		if(returnVal == SQLITE_ROW)
 		{
+			std::cout << "Song Id : " << sqlite3_column_int(requestStatement, 0) << std::endl;
 			id = sqlite3_column_int(requestStatement,0);
 		}
 
@@ -505,13 +507,15 @@ bool TagInfos::compareAlbum(sqlite3* db)	// true -> OK
 		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
 	SELECT albums.name,artists.name \
 	FROM albums,artists \
-	WHERE albums.name=? AND artists.name=? \
+	WHERE albums.name=? AND artists.name=? AND albums.year=? AND albums.ntrack=? \
 		AND  albums.id_artist=artists.id", -1, &requestStatement, 0), 0);
 
 		if(returnVal != SQLITE_OK) { return false; }
 
 		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, m_albums_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
 		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 2, m_albums_artists_name.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 3, m_albums_year.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+		if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 4, m_albums_ntracks), 0) != SQLITE_OK) { return false; };
 
 		do{
 			returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
@@ -693,21 +697,22 @@ bool TagInfos::compareSongPath(sqlite3* db)	// Checking if the path exists in th
 	int i = 0;
 
 	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
-SELECT songs.path \
-FROM songs \
-WHERE songs.path=?", -1, &requestStatement, 0), 0);
+SELECT directories.path,songs.path \
+FROM songs,directories \
+WHERE songs.path=? AND directories.path=? AND songs.id_dirName=directories.id", -1, &requestStatement, 0), 0);
 
 	if(returnVal != SQLITE_OK) { return false; }
 
 	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, m_songs_path.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 2, m_directories_path.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
 
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
 		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return false; }
 		if(returnVal != SQLITE_DONE)
 		{
-			if(m_songs_path != std::string((char*)sqlite3_column_text(requestStatement, 0)))
-			{ return false; }
+			if(m_directories_path != std::string((char*)sqlite3_column_text(requestStatement, 0)))	{ return false; }
+			if(m_songs_path != std::string((char*)sqlite3_column_text(requestStatement, 1)))	{ return false; }
 			i++;
 		}
 		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
@@ -733,11 +738,12 @@ bool TagInfos::compareSongData(sqlite3* db)
 		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
 	SELECT songs.id_album,songs.id_genre,songs.id_artist,songs.id_dirName,songs.path,songs.name,songs.tracknbr,songs.comment \
 	FROM songs,directories,albums \
-	WHERE songs.path=? AND songs.id_dirName=directories.id AND songs.id_album=albums.id", -1, &requestStatement, 0), 0);
+	WHERE songs.path=? AND directories.path=? AND songs.id_dirName=directories.id AND songs.id_album=albums.id", -1, &requestStatement, 0), 0);
 
 		if(returnVal != SQLITE_OK) { return false; }
 
 		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 1, m_songs_path.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
+		if(sqliteReturnVal(sqlite3_bind_text(requestStatement, 2, m_directories_path.c_str(), -1, SQLITE_STATIC), 0) != SQLITE_OK) { return false; };
 
 		do{
 			returnVal = sqliteReturnVal(sqlite3_step(requestStatement), 0);
