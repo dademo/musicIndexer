@@ -11,7 +11,7 @@
 int main (int argc, char* argv[])
 {
 	std::string origPath = "/home/dademo/Musique";
-	//std::string origPath = "/home/dademo/Musique/Albums/David Guetta";
+	//std::string origPath = "/home/dademo/Musique/Daft.Punk.Discographie.FLAC-NoTag";
 	sqlite3 *db;
 	int rc;
 	//char* err;
