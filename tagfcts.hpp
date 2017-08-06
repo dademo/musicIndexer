@@ -66,7 +66,8 @@ public:
 	// Special functions
 	bool sync(sqlite3* db);				// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
 	bool insertAlbum(sqlite3* db);			// Adding the albums_name,albums_artists_name(int),albums_ntracks,albums_year to the database
-	bool insertArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
+	bool insertSongArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
+	bool insertAlbumArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
 	bool insertAudioProperties(sqlite3* db);	// Adding the audio properties to the database
 	bool insertDirPath(sqlite3* db);		// Adding the directories_path to the database
 	bool insertGenre(sqlite3* db);			// Adding the genre to thje database
@@ -75,7 +76,8 @@ public:
 	std::string toString();
 
 	bool compareAlbum(sqlite3* db);			// If the album exists in the database
-	bool compareArtist(sqlite3* db);		// If the artist (album and song) exists in the databse
+	bool compareSongArtist(sqlite3* db);		// If the artist (album and song) exists in the databse
+	bool compareAlbumArtist(sqlite3* db);		// If the artist (album and song) exists in the databse
 	bool compareGenre(sqlite3* db);			// If the genre exist in the database
 	bool compareDirPath(sqlite3* db);		// Checking if the directory path exists in the database
 	bool compareSongPath(sqlite3* db);		// Checking if the file name exists in the database
@@ -85,7 +87,7 @@ public:
 	
 
 	// Static functions //
-	static int getAlbumId(sqlite3* db, std::string albumName);
+	static int getAlbumId(sqlite3* db, std::string albumName,std::string artistName, int nTracks, std::string date);
 	static int getGenreId(sqlite3* db, std::string genreName);
 	static int getArtistId(sqlite3* db, std::string artistName);
 	static int getDirnameId(sqlite3* db, std::string dirName);
