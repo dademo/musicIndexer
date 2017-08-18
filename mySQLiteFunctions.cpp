@@ -117,3 +117,42 @@ int idResearch(sqlite3* db, std::string dbName, std::string paramName, std::stri
 
 	return id;
 }
+
+int getnResults(sqlite3* db, std::string request)
+{
+	sqlite3_stmt* requestStatement;
+	int returnVal = 0;
+	int i = 0;
+
+	if(sqliteReturnVal(sqlite3_prepare_v2(db, request.c_str(), -1, &requestStatement, 0)) != SQLITE_OK) { return -1; };
+
+	do {
+		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
+		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return -1; }
+		if(returnVal != SQLITE_DONE)
+		{
+			i++;
+		}
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+
+	} while (returnVal != SQLITE_DONE);
+
+	return i;
+}
+
+int delElementFromDb(sqlite3* db, std::string request)
+{
+	sqlite3_stmt* requestStatement;
+	int returnVal = 0;
+
+	if(sqliteReturnVal(sqlite3_prepare_v2(db, request.c_str(), -1, &requestStatement, 0)) != SQLITE_OK) { return -1; };
+
+	do {
+		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
+		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return -1; }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+
+	} while (returnVal != SQLITE_DONE);
+
+	return SQLITE_OK;
+}
