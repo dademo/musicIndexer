@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <stdlib.h>	// atoi()
 
 #include "sqlite3.h"
 #include "music_sqlTables.hpp"
@@ -7,6 +8,9 @@
 #include "tagfcts.hpp"
 
 #define DBNAME "/tmp/music.db"
+
+
+int callbackFct(void* db, int ncols, char** stringResults, char** colsNames);
 
 int main (int argc, char* argv[])
 {
@@ -57,8 +61,29 @@ int main (int argc, char* argv[])
 		{
 			//std::cout << it->toString() << std::endl;
 			std::cout << "Sycing : " << it->getData().name << " [" << it->getData().album.name << "]" << std::endl;
-			it->sync(db);
+			//it->sync(db);
 		}
+
+		std::vector<int> allIds;
+
+		//sqlite3_exec(db, "SELECT id FROM songs", callbackFct, db, 0);
+		sqlite3_exec(db, "SELECT id FROM songs", callbackFct, &allIds, 0);
+
+		//std::cout << TagInfos(db, 10).toString() << std::endl;
+
+		for(std::vector<int>::iterator it = allIds.begin(); it != allIds.end(); it++)
+		{
+			std::cout << TagInfos(db, *it).toString() << std::endl;
+			TagInfos(db, *it).sync(db);
+			for(int i(0); i <= 50; i++)
+			{
+				std::cout << ((i%2)? "-":"_");
+			}
+			std::cout << std::endl;
+		}
+		/*struct songInfos data;
+
+		TagInfos::getSongInfosById(db, 1, &data);*/
 
 		//TagInfos maMusique("/home/dademo/Musique/Flac/Daft Punk/Musique Vol. 1 (1993-2005)/1 - Daft Punk - Musique.flac");
 		//TagInfos maMusique("/home/dademo/Musique/Flac/Daft Punk/Random Access Memories/1 - Daft Punk - Give Life Back to Music.flac");
@@ -79,3 +104,21 @@ int main (int argc, char* argv[])
 		return 0;
 	}
 }
+
+
+int callbackFct(void* listIds, int ncols, char** stringResults, char** colsNames)
+{
+	//int id = atoi(stringResults[0]);
+	((std::vector<int>*) listIds)->push_back(atoi(stringResults[0]));//= atoi(stringResults[0]);
+
+	/*for(int i(0); i <= 50; i++)
+	{
+		std::cout << ((i%2)? "-":"_");
+	}
+	std::cout << std::endl;*/
+
+	//std::cout << colsNames[0] << " : " << colNum  << " (" << ncols << " columns)" << std::endl;
+
+	return 0;
+}
+
