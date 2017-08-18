@@ -69,3 +69,12 @@ bool isDir(std::string path)	// see man 2 stat
 
 	//return true;
 }
+
+
+std::string getFileLastExtension(std::string file)
+{
+	std::string extension = file.substr(file.rfind(".")+1);
+
+	return extension;
+}
+
