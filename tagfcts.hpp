@@ -14,12 +14,13 @@ struct albumInfos {
 	std::string year;
 };
 
-struct musicInfo {
+struct songInfos {
 	std::string name;
 	struct albumInfos album;
 	std::string artist;
 	int tracknbr;
 	std::string genre;
+	std::string comment;
 	std::string fullPath;
 };
 
@@ -29,8 +30,6 @@ struct audioProperties {
 	int samplerate;	// Hz
 	int channels;
 };
-
-std::string getFileLastExtension(std::string file);
 
 // Class that store all values from the database. It can check and update it if necessary
 class TagInfos
@@ -55,10 +54,11 @@ public:
 		);
 	TagInfos(TagLib::FileRef targetFile);
 	TagInfos(std::string path) : TagInfos(TagLib::FileRef(path.c_str(), TagLib::AudioProperties::Average)) {}
+	TagInfos(sqlite3* db, int songDbId);	// Creating an object from the DB, with only the song ID
 	~TagInfos();
 
 	// Accessors
-	struct musicInfo getData();
+	struct songInfos getData();
 	struct audioProperties getAudioProperties();
 	std::string getDir()		{ return m_directories_path; }
 	std::string getFileName()	{ return m_songs_path; }
@@ -92,6 +92,10 @@ public:
 	static int getArtistId(sqlite3* db, std::string artistName);
 	static int getDirnameId(sqlite3* db, std::string dirName);
 	static int getSongId(sqlite3* db, std::string dirPath, std::string songFileName);
+		// For the constructor //
+	static bool getAlbumInfosById(sqlite3* db, int albumId, struct albumInfos* infos);
+	static bool getSongInfosById(sqlite3* db, int songId, struct songInfos* infos) ;
+	static bool getAudioPropertiesById(sqlite3* db, int songId, struct audioProperties* infos);
 
 
 private:
