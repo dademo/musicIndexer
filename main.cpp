@@ -61,7 +61,7 @@ int main (int argc, char* argv[])
 		{
 			//std::cout << it->toString() << std::endl;
 			std::cout << "Sycing : " << it->getData().name << " [" << it->getData().album.name << "]" << std::endl;
-			//it->sync(db);
+			it->sync(db);
 		}
 
 		std::vector<int> allIds;
@@ -73,14 +73,16 @@ int main (int argc, char* argv[])
 
 		for(std::vector<int>::iterator it = allIds.begin(); it != allIds.end(); it++)
 		{
-			std::cout << TagInfos(db, *it).toString() << std::endl;
-			TagInfos(db, *it).sync(db);
-			for(int i(0); i <= 50; i++)
+			//std::cout << TagInfos(db, *it).toString() << std::endl;
+			//TagInfos(db, *it).sync(db);
+			/*for(int i(0); i <= 50; i++)
 			{
 				std::cout << ((i%2)? "-":"_");
-			}
+			}*/
 			std::cout << std::endl;
 		}
+
+		//TagInfos(db, 2).delDataFromDb(db);
 		/*struct songInfos data;
 
 		TagInfos::getSongInfosById(db, 1, &data);*/
