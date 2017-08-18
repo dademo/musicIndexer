@@ -214,6 +214,7 @@ bool TagInfos::sync(sqlite3* db)
 		else
 		{
 			// Deleting the entry from the database ++ look for every object linked to this entry
+			delDataFromDb(db);
 		}
 	return true;
 }
@@ -495,9 +496,9 @@ int TagInfos::getSongId(sqlite3* db, std::string dirPath, std::string songFileNa
 	int id = 0;
 
 	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
-SELECT songs.id \
-FROM directories,songs \
-WHERE directories.path=? AND songs.path=? AND songs.id_dirName=directories.id", -1, &requestStatement, 0));
+	SELECT songs.id \
+	FROM directories,songs \
+	WHERE directories.path=? AND songs.path=? AND songs.id_dirName=directories.id", -1, &requestStatement, 0));
 
 	if(returnVal != SQLITE_OK) { return -1; }
 
@@ -511,6 +512,36 @@ WHERE directories.path=? AND songs.path=? AND songs.id_dirName=directories.id", 
 		if(returnVal == SQLITE_ROW)
 		{
 			//std::cout << "Song Id : " << sqlite3_column_int(requestStatement, 0) << std::endl;
+			id = sqlite3_column_int(requestStatement,0);
+		}
+
+	} while (returnVal != SQLITE_DONE);
+
+	sqlite3_finalize(requestStatement);
+	return id;
+}
+
+int TagInfos::getAudioPropertiesId(sqlite3* db, int songId)
+{
+	sqlite3_stmt* requestStatement;
+	int returnVal = 0;
+	int id = 0;
+
+	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
+	SELECT audioProperties.id \
+	FROM audioProperties \
+	WHERE audioProperties.id_song=?", -1, &requestStatement, 0));
+
+	if(returnVal != SQLITE_OK) { return -1; }
+
+	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 1, songId)) != SQLITE_OK) { return -1; };
+
+	do{
+		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
+		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return -1; }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_ROW)
+		{
 			id = sqlite3_column_int(requestStatement,0);
 		}
 
@@ -968,3 +999,60 @@ bool TagInfos::getAudioPropertiesById(sqlite3* db, int songId, struct audioPrope
 
 	return true;
 }
+
+
+void TagInfos::delDataFromDb(sqlite3* db)
+{
+	// AlbumArtist
+	if(!(getnResults(db, "SELECT albums.id FROM albums,artists WHERE albums.id_artist=artists.id AND artists.id=" + std::to_string(getArtistId(db, m_albums_artists_name))) > 1)) { delAlbumArtistFromDb(db); }
+
+	// SongArtist
+	if(!(getnResults(db, "SELECT songs.id FROM songs,artists WHERE songs.id_artist=artists.id AND artists.id=" + std::to_string(getArtistId(db, m_songs_artists_name))) > 1)) { delSongArtistFromDb(db); }
+
+	// Album
+	if(!(getnResults(db, "SELECT songs.id FROM songs,albums WHERE songs.id_album=albums.id AND albums.id=" + std::to_string(getAlbumId(db, m_albums_name, m_albums_artists_name, m_albums_ntracks, m_albums_year))) > 1)) { delAlbumFromDb(db); }
+
+	// AudioProperties
+	if(!(getnResults(db, "SELECT audioProperties.id FROM audioProperties WHERE audioProperties.id_song=" + std::to_string(getSongId(db, m_directories_path, m_songs_path))) > 1)) { delAudioPropertiesFromDb(db); }
+
+	// The song itself
+	delSongFromDb(db);
+
+	/*std::cout << getnResults(db, "SELECT songs.id FROM songs,albums WHERE songs.id_album=albums.id AND albums.id=" + std::to_string(getAlbumId(db, m_albums_name, m_albums_artists_name, m_albums_ntracks, m_albums_year))) << std::endl;
+	std::cout << getnResults(db, "SELECT albums.id FROM albums,artists WHERE albums.id_artist=artists.id AND artists.id=" + std::to_string(getArtistId(db, m_albums_artists_name))) << std::endl;
+	std::cout << getnResults(db, "SELECT songs.id FROM songs,artists WHERE songs.id_artist=artists.id AND artists.id=" + std::to_string(getArtistId(db, m_songs_artists_name))) << std::endl;
+	std::cout << getnResults(db, "SELECT audioProperties.id FROM audioProperties WHERE audioProperties.id_song=" + std::to_string(getSongId(db, m_directories_path, m_songs_path))) << std::endl;*/
+
+}
+
+
+void TagInfos::delAlbumArtistFromDb(sqlite3* db)
+{
+	std::cout << "Deleting album artist of " + m_songs_name + " [" + m_albums_name + "] with id : " + std::to_string(getArtistId(db, m_albums_artists_name)) << std::endl;
+	delElementFromDb(db, "DELETE FROM artists WHERE artists.id=" + std::to_string(getArtistId(db, m_albums_artists_name)));
+}
+
+void TagInfos::delSongArtistFromDb(sqlite3* db)
+{
+	std::cout << "Deleting song artist of " + m_songs_name + " [" + m_albums_name + "] with id : " + std::to_string(getArtistId(db, m_songs_artists_name)) << std::endl;
+	delElementFromDb(db, "DELETE FROM artists WHERE artists.id=" + std::to_string(getArtistId(db, m_songs_artists_name)));
+}
+
+void TagInfos::delAlbumFromDb(sqlite3* db)
+{
+	std::cout << "Deleting album " + m_songs_name + " [" + m_albums_name + "] with id : " + std::to_string(getAlbumId(db, m_albums_name, m_albums_artists_name, m_albums_ntracks, m_albums_year)) << std::endl;
+	delElementFromDb(db, "DELETE FROM albums WHERE albums.id=" + std::to_string(getAlbumId(db, m_albums_name, m_albums_artists_name, m_albums_ntracks, m_albums_year)));
+}
+
+void TagInfos::delAudioPropertiesFromDb(sqlite3* db)
+{
+	std::cout << "Deleting audio properties of " + m_songs_name + " [" + m_albums_name + "]"<< std::endl;
+	delElementFromDb(db, "DELETE FROM audioProperties WHERE audioProperties.id=" + std::to_string(getAudioPropertiesId(db, getSongId(db, m_directories_path, m_songs_path) )));
+}
+
+void TagInfos::delSongFromDb(sqlite3* db)
+{
+	std::cout << "Deleting song " + m_songs_name + " [" + m_albums_name + "] with id : " + std::to_string(getSongId(db, m_directories_path, m_songs_path))<< std::endl;
+	delElementFromDb(db, "DELETE FROM songs WHERE songs.id=" + std::to_string(getSongId(db, m_directories_path, m_songs_path)));
+}
+

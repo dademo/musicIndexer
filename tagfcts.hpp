@@ -57,14 +57,15 @@ public:
 	TagInfos(sqlite3* db, int songDbId);	// Creating an object from the DB, with only the song ID
 	~TagInfos();
 
-	// Accessors
+	// Accessors //
 	struct songInfos getData();
 	struct audioProperties getAudioProperties();
 	std::string getDir()		{ return m_directories_path; }
 	std::string getFileName()	{ return m_songs_path; }
 
-	// Special functions
+	// Special functions //
 	bool sync(sqlite3* db);				// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
+	// Insertion functions //
 	bool insertAlbum(sqlite3* db);			// Adding the albums_name,albums_artists_name(int),albums_ntracks,albums_year to the database
 	bool insertSongArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
 	bool insertAlbumArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
@@ -75,6 +76,7 @@ public:
 	bool updateSong(sqlite3* db);	/*TODO*/	// Updating the song, if already exists but doesn't fit with the acutal datas
 	std::string toString();
 
+	// Comaprison functions
 	bool compareAlbum(sqlite3* db);			// If the album exists in the database
 	bool compareSongArtist(sqlite3* db);		// If the artist (album and song) exists in the databse
 	bool compareAlbumArtist(sqlite3* db);		// If the artist (album and song) exists in the databse
@@ -83,8 +85,14 @@ public:
 	bool compareSongPath(sqlite3* db);		// Checking if the file name exists in the database
 	bool compareSongData(sqlite3* db);		// If the song exist in the database with the same data
 	bool compareAudioProperties(sqlite3* db);	// Check for the presence of an audioProperty in the database
-	// if compareSongPath == true && compareSongData == false -> SQL:UPDATE
-	
+	// Deletion functions
+	void delDataFromDb(sqlite3* db);		// Generic function to delete data from the db. Also check if the linked data have another reference, or they will be deleted
+	void delAlbumArtistFromDb(sqlite3* db);		// Deleting the current album artist from the db
+	void delSongArtistFromDb(sqlite3* db);		// Deleting the current song artist from the db
+	void delAlbumFromDb(sqlite3* db);		// Deleting the current album from the db
+	void delAudioPropertiesFromDb(sqlite3* db);	// Deleting the associated audio properties from the db
+	void delSongFromDb(sqlite3* db);		// Deleting the current song from the db (last function to bez called)
+	// Deleting the current audio properties from the db
 
 	// Static functions //
 	static int getAlbumId(sqlite3* db, std::string albumName,std::string artistName, int nTracks, std::string date);
@@ -92,6 +100,8 @@ public:
 	static int getArtistId(sqlite3* db, std::string artistName);
 	static int getDirnameId(sqlite3* db, std::string dirName);
 	static int getSongId(sqlite3* db, std::string dirPath, std::string songFileName);
+	static int getAudioPropertiesId(sqlite3* db, int songId);
+
 		// For the constructor //
 	static bool getAlbumInfosById(sqlite3* db, int albumId, struct albumInfos* infos);
 	static bool getSongInfosById(sqlite3* db, int songId, struct songInfos* infos) ;
