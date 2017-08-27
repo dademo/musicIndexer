@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS \"albums\" (\n\
 	`id`		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,\n\
 	`id_artist`	INTEGER,\n\
 	`name`		TEXT,\n\
-	`ntrack`	INTEGER	/*Number of tracks in the album*/,\n\
+	`ntracks`	INTEGER	/*Number of tracks in the album*/,\n\
 	`year`		TEXT\n\
 );",
 "CREATE TABLE IF NOT EXISTS \"genres\" (\n\
@@ -97,7 +97,7 @@ void checkTables(sqlite3* db)
 		{"id", SQLITE_INTEGER, true},
 		{"id_artist", SQLITE_INTEGER, false},
 		{"name", SQLITE_TEXT, false},
-		{"ntrack", SQLITE_INTEGER, false},
+		{"ntracks", SQLITE_INTEGER, false},
 		{"year", SQLITE_TEXT, false}
 	},{	// Artists table
 		{"id", SQLITE_INTEGER, true},
