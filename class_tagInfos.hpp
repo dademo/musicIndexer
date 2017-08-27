@@ -92,7 +92,7 @@ public:
 	static bool getAudioPropertiesById(sqlite3* db, int songId, struct audioProperties* infos);
 
 		// Additionnals functions (search) //
-	static std::vector<TagInfos> searchTagInfos(sqlite3* db, struct songInfos searchRequirements, struct audioProperties songProperties={});	/*TODO : Make a search in the db using all the informations given in the songInfos structure, all void fields will be ignored (==0 or =="" for std::string) */
+	static std::vector<TagInfos> searchTagInfos(sqlite3* db, struct songInfos searchRequirements, struct audioProperties songProperties={});	/*Make a search in the db using all the informations given in the songInfos structure, all void fields will be ignored (==0 or =="" for std::string) */
 		// NOTE : using the LIKE word instead of = with SELECT, and % to continue and _ to replace a single character --> http://sql.sh/cours/where/like
 
 private:
