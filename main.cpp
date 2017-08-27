@@ -47,27 +47,31 @@ int main (int argc, char* argv[])
 		{
 			//std::cout << it->toString() << std::endl;
 			std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
-			it->sync(db);
+			//it->sync(db);
 		}
 
-		std::vector<int> allIds;
+		struct songInfos dataInfos = genVoidStructSongInfos();
 
-		//sqlite3_exec(db, "SELECT id FROM songs", callbackFct, db, 0);
-		sqlite3_exec(db, "SELECT id FROM songs", callbackFct, &allIds, 0);
+		dataInfos.name="Contact";
+		dataInfos.artist="Daft Punk";
+		dataInfos.tracknbr=13;
+		dataInfos.album.name="Random%";
 
-		//std::cout << TagInfos(db, 10).toString() << std::endl;
+		//struct audioProperties dataProperties = {1,2,3,4};
+		struct audioProperties dataProperties = genVoidStructAudioProperties();
 
-		for(std::vector<int>::iterator it = allIds.begin(); it != allIds.end(); it++)
+		std::vector<TagInfos> allResults = TagInfos::searchTagInfos(db, dataInfos, dataProperties);
+
+		for(std::vector<TagInfos>::iterator it = allResults.begin(); it != allResults.end(); it++)
 		{
-			//std::cout << TagInfos(db, *it).toString() << std::endl;
-			//TagInfos(db, *it).sync(db);
-			/*for(int i(0); i <= 50; i++)
-			{
-				std::cout << ((i%2)? "-":"_");
-			}*/
-			//std::cout << std::endl;
+			std::cout << (*it).toString() << std::endl;
 		}
 
+		std::vector<TagInfos> allResults2 = TagInfos::searchTagInfos(db, allResults[0].getData(), dataProperties);
+		for(std::vector<TagInfos>::iterator it = allResults2.begin(); it != allResults2.end(); it++)
+		{
+			std::cout << (*it).toString() << std::endl;
+		}
 		//TagInfos(db, 2).delDataFromDb(db);
 		/*struct songInfos data;
 
