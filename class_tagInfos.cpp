@@ -9,42 +9,6 @@
 #include "mySQLiteFunctions.hpp"
 #include "class_tagInfos.hpp"
 
-TagInfos::TagInfos(
-	std::string	albums_name,
-	std::string	albums_artist,
-	int		albums_ntracks,
-	std::string	albums_year,
-	std::string	directories_path,
-	std::string	genres_name,
-	std::string	songs_name,
-	std::string	songs_artists_name,
-	int		songs_tracknbr,
-	std::string	songs_comment,
-	std::string	songs_path,
-	int		length,
-	int		bitrate,
-	int		samplerate,
-	int		channels
-	) : 
-	m_albums_name(albums_name),
-	m_albums_artists_name(albums_artist),
-	m_albums_ntracks(albums_ntracks),
-	m_albums_year(albums_year),
-	m_directories_path(directories_path),
-	m_genres_name(genres_name),
-	m_songs_name(songs_name),
-	m_songs_artists_name(songs_artists_name),
-	m_songs_tracknbr(songs_tracknbr),
-	m_songs_comment(songs_comment),
-	m_songs_path(songs_path),
-	m_audioProperties_length(length),
-	m_audioProperties_bitrate(bitrate),
-	m_audioProperties_samplerate(samplerate),
-	m_audioProperties_channels(channels)
-{
-	// TODO : Request to the SQL database //
-}
-
 
 TagInfos::TagInfos(TagLib::FileRef targetFile)
 {
@@ -137,6 +101,27 @@ TagInfos::TagInfos(sqlite3* db, int songDbId) :
 	}
 }
 
+TagInfos::TagInfos(struct songInfos songTagInfos, struct audioProperties songAudioProperties):
+	m_albums_name			(songTagInfos.album.name),
+	m_albums_artists_name		(songTagInfos.album.albumArtist),
+	m_albums_ntracks		(songTagInfos.album.nTracks),
+	m_albums_year			(songTagInfos.album.year),
+	m_directories_path		(songTagInfos.fullPath.substr(0, songTagInfos.fullPath.rfind("/"))),
+	m_genres_name			(songTagInfos.genre),
+	m_songs_name			(songTagInfos.name),
+	m_songs_artists_name		(songTagInfos.artist),
+	m_songs_tracknbr		(songTagInfos.tracknbr),
+	m_songs_comment			(songTagInfos.comment),
+	m_songs_path			(songTagInfos.fullPath.substr(songTagInfos.fullPath.rfind("/")+1)),
+	m_audioProperties_length	(songAudioProperties.length),
+	m_audioProperties_bitrate	(songAudioProperties.bitrate),
+	m_audioProperties_samplerate	(songAudioProperties.samplerate),
+	m_audioProperties_channels	(songAudioProperties.channels)
+{
+	
+}
+
+
 TagInfos::~TagInfos()
 {
 
@@ -228,7 +213,7 @@ bool TagInfos::insertAlbum(sqlite3* db)
 		int returnVal = 0;
 		int artistId = getArtistId(db, m_albums_artists_name);
 
-		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO albums(id_artist, name, nTrack, year) VALUES (?,?,?,?)", -1, &requestStatement, 0));
+		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO albums(id_artist, name, ntracks, year) VALUES (?,?,?,?)", -1, &requestStatement, 0));
 
 		if(returnVal != SQLITE_OK) { return false; }
 
@@ -448,8 +433,8 @@ int TagInfos::getAlbumId(sqlite3* db, std::string albumName,std::string artistNa
 	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
 SELECT albums.id \
 FROM albums,artists \
-WHERE albums.name=? AND artists.name=? AND albums.ntrack=? AND albums.year=? AND artists.id=albums.id_artist", -1, &requestStatement, 0));
-//WHERE albums.name=? AND artists.name=? AND albums.ntrack=? AND albums.year=? AND artists.id=albums.id_artists", -1, &requestStatement, 0), 0);
+WHERE albums.name=? AND artists.name=? AND albums.ntracks=? AND albums.year=? AND artists.id=albums.id_artist", -1, &requestStatement, 0));
+//WHERE albums.name=? AND artists.name=? AND albums.ntracks=? AND albums.year=? AND artists.id=albums.id_artists", -1, &requestStatement, 0), 0);
 
 	if(returnVal != SQLITE_OK) { return -1; }
 
@@ -563,7 +548,7 @@ bool TagInfos::compareAlbum(sqlite3* db)	// true -> OK
 		returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
 	SELECT albums.name,artists.name \
 	FROM albums,artists \
-	WHERE albums.name=? AND artists.name=? AND albums.year=? AND albums.ntrack=? \
+	WHERE albums.name=? AND artists.name=? AND albums.year=? AND albums.ntracks=? \
 		AND  albums.id_artist=artists.id", -1, &requestStatement, 0));
 
 		if(returnVal != SQLITE_OK) { return false; }
@@ -894,7 +879,7 @@ bool TagInfos::getAlbumInfosById(sqlite3* db, int albumId, struct albumInfos* in
 	int returnVal = 0;
 
 	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
-	SELECT albums.name, artists.name, albums.ntrack, albums.year \
+	SELECT albums.name, artists.name, albums.ntracks, albums.year \
 	FROM albums,artists \
 	WHERE albums.id=? AND albums.id_artist=artists.id", -1, &requestStatement, 0));
 
@@ -1056,3 +1041,160 @@ void TagInfos::delSongFromDb(sqlite3* db)
 	delElementFromDb(db, "DELETE FROM songs WHERE songs.id=" + std::to_string(getSongId(db, m_directories_path, m_songs_path)));
 }
 
+
+
+std::vector<TagInfos> TagInfos::searchTagInfos(sqlite3* db, struct songInfos songSearch, struct audioProperties songProperties)
+{
+	// Definitions //
+	enum dataType { dataType_int, dataType_text };
+	struct dataBind {
+		dataType type;
+		std::string data;
+	};
+
+	// Variables //
+	std::vector<TagInfos> searchResults;
+	std::vector<std::string> searchDB, finalSearchDB;
+	std::map<std::string, struct dataBind> albums;
+	std::map<std::string, struct dataBind> songs;
+	std::map<std::string, struct dataBind> songAudioProperties;
+	std::string directories="";
+	std::string genre="";
+
+	std::string request="";
+	std::string albumRequest="";
+	bool bAlbumRequest=false;
+
+	if(songSearch.album.name != "") { albums["name"]={ dataType_text, songSearch.album.name }; searchDB.push_back("albums"); }
+	if(songSearch.album.albumArtist != "") { albums["artist"]={ dataType_text, songSearch.album.albumArtist }; searchDB.push_back("albums"); searchDB.push_back("artists"); }
+	if(songSearch.album.nTracks != 0) { albums["ntracks"]={ dataType_int, std::to_string(songSearch.album.nTracks) }; searchDB.push_back("albums"); }
+	if(songSearch.album.year != "") { albums["year"]={ dataType_text, songSearch.album.year }; searchDB.push_back("albums"); }
+
+	if(songSearch.genre != "") { genre=songSearch.genre ; searchDB.push_back("genres"); }
+
+	if(songSearch.artist != "") { songs["artist"]={ dataType_text, songSearch.artist }; searchDB.push_back("artists"); }
+	if(songSearch.name != "") { songs["name"]={ dataType_text, songSearch.name }; }
+	if(songSearch.tracknbr != 0) { songs["tracknbr"]={ dataType_int, std::to_string(songSearch.tracknbr) }; }
+	if(songSearch.comment != "") { songs["comment"]={ dataType_int, songSearch.comment }; }
+
+	if(songSearch.fullPath != "")
+	{
+		directories=songSearch.fullPath.substr(0, songSearch.fullPath.rfind("/"));
+		songs["path"]={ dataType_text, songSearch.fullPath.substr(songSearch.fullPath.rfind("/")+1)};
+		searchDB.push_back("directories");
+		searchDB.push_back("songs");
+	}
+
+	if(songProperties.length != 0) { songAudioProperties["length"]={ dataType_int, std::to_string(songProperties.length) }; searchDB.push_back("audioProperties"); };
+	if(songProperties.bitrate != 0) { songAudioProperties["bitrate"]={ dataType_int, std::to_string(songProperties.bitrate) };  searchDB.push_back("audioProperties"); };
+	if(songProperties.samplerate != 0) { songAudioProperties["samplerate"]={dataType_int, std::to_string(songProperties.samplerate) }; searchDB.push_back("audioProperties"); };
+	if(songProperties.channels != 0) { songAudioProperties["channels"]={ dataType_int, std::to_string(songProperties.channels) }; searchDB.push_back("audioProperties"); };
+
+	// Unique values
+	bool multipleDB[5] = {false, false, false, false, false};	// albums, artists, genres, audioProperties, directories
+	for(std::vector<std::string>::iterator it=searchDB.begin(); it!=searchDB.end(); it++)
+	{
+		if(*it == "albums")
+		{ if(multipleDB[0] == false) { finalSearchDB.push_back(*it); multipleDB[0] = true; bAlbumRequest = true; } }
+		if(*it == "artists")
+		{ if(multipleDB[1] == false) { finalSearchDB.push_back(*it); multipleDB[1] = true; } }
+		if(*it == "genres")
+		{ if(multipleDB[2] == false) { finalSearchDB.push_back(*it); multipleDB[2] = true; } }
+		if(*it == "audioProperties")
+		{ if(multipleDB[3] == false) { finalSearchDB.push_back(*it); multipleDB[3] = true; } }
+		if(*it == "directories")
+		{ if(multipleDB[4] == false) { finalSearchDB.push_back(*it); multipleDB[4] = true; } }
+	}
+
+	request += "SELECT songs.id FROM songs";
+
+	for(std::vector<std::string>::iterator it=finalSearchDB.begin(); it != finalSearchDB.end(); it++)
+	{
+		request += "," + *it;
+	}
+
+	request += " WHERE ";
+
+	int nElems = 0;
+	for(std::map<std::string, struct dataBind>::iterator it=songs.begin(); it != songs.end(); it++)
+	{
+		if((*it).first == "artist") { request += std::string(((nElems != 0)? " AND " : "" )) + "artists.name LIKE \"" + (*it).second.data + "\""; }
+		else
+		{
+			request += std::string(((nElems != 0)? " AND " : "" )) + "songs." + (*it).first +
+			(((*it).second.type==dataType_text )? " LIKE \"" : "=") + (*it).second.data + (((*it).second.type==dataType_text )? "\"" : "");
+		}
+		nElems++;
+	}
+	for(std::map<std::string, struct dataBind>::iterator it=songAudioProperties.begin(); it != songAudioProperties.end(); it++)
+	{
+		request += std::string(((nElems != 0)? " AND " : "" )) + "audioProperties." + (*it).first + (((*it).second.type==dataType_text )? " LIKE \"" : "=") + (*it).second.data + (((*it).second.type==dataType_text )? "\"" : "");
+		nElems++;
+	}
+
+	if(genre != "")
+	{
+		request += std::string(((nElems != 0)? " AND " : "" )) + "genres.name LIKE \"" + genre + "\"";
+		nElems++;
+	}
+	if(directories != "")
+	{
+		request += std::string(((nElems != 0)? " AND " : "" )) + "directories.path=\"" + directories + "\"";
+		nElems++;
+	}
+	// Links between tables
+	for(std::vector<std::string>::iterator it=finalSearchDB.begin(); it != finalSearchDB.end(); it++)
+	{
+		if((*it) == "albums") { request += std::string(((nElems != 0)? " AND " : "" )) + "songs.id_album=albums.id"; }
+		if((*it) == "artists") { request += std::string(((nElems != 0)? " AND " : "" )) + "songs.id_artist=artists.id"; }
+		if((*it) == "audioProperties") { request += std::string(((nElems != 0)? " AND " : "" )) + "audioProperties.id_song=songs.id"; }
+		if((*it) == "genres") { request += std::string(((nElems != 0)? " AND " : "" )) + "songs.id_genre=genres.id"; }
+		if((*it) == "directories") { request += std::string(((nElems != 0)? " AND " : "" )) + "songs.id_dirName=directories.id"; }
+	}
+
+	if(bAlbumRequest)
+	{
+		int nElemsBis=0;
+		albumRequest = std::string("SELECT albums.id FROM albums") + ((songSearch.album.albumArtist != "")? ",artists" : "" ) + " WHERE ";
+		for(std::map<std::string, struct dataBind>::iterator it=albums.begin(); it != albums.end(); it++)
+		{
+			if((*it).first == "artist")
+			{
+				albumRequest += std::string(((nElemsBis != 0)? " AND " : "" )) + "albums.id_artist=artists.id AND artists.name LIKE \"" + (*it).second.data + "\"";
+				nElemsBis++;
+			}
+			else
+			{
+				albumRequest += std::string(((nElemsBis != 0)? " AND " : "" )) + "albums." + (*it).first + (((*it).second.type==dataType_text )? " LIKE \"" : "=") + (*it).second.data + (((*it).second.type==dataType_text )? "\"" : "");
+				nElemsBis++;
+			}
+		}
+		request += std::string(((nElems != 0)? " AND " : "" )) + "songs.id_album=(" + albumRequest + ")";
+	}
+
+	std::cout << "Request : " << std::endl << request << std::endl;
+
+
+	// Request part //
+	sqlite3_stmt* requestStatement;
+	int returnVal = 0;
+
+	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, request.c_str(), -1, &requestStatement, 0));
+
+	if(returnVal != SQLITE_OK) { return searchResults; }	// void return
+
+
+	do {
+		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
+		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return searchResults; }
+		if(returnVal != SQLITE_DONE)
+		{
+			searchResults.push_back(TagInfos(db, sqlite3_column_int(requestStatement, 0)));
+		}
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+
+	} while (returnVal != SQLITE_DONE);
+
+
+	return searchResults;
+}

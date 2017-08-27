@@ -35,26 +35,10 @@ struct audioProperties {
 class TagInfos
 {
 public:
-	TagInfos(
-	std::string	albums_name,
-	std::string	albums_artist,
-	int		albums_ntracks,
-	std::string	albums_year,
-	std::string	directories_path,
-	std::string	genres_name,
-	std::string	songs_name,
-	std::string	songs_artists_name,
-	int		songs_tracknbr,
-	std::string	songs_comment,
-	std::string	songs_path,
-	int		length,
-	int		bitrate,
-	int		samplerate,
-	int		channels
-		);
 	TagInfos(TagLib::FileRef targetFile);
 	TagInfos(std::string path) : TagInfos(TagLib::FileRef(path.c_str(), TagLib::AudioProperties::Average)) {}
 	TagInfos(sqlite3* db, int songDbId);	// Creating an object from the DB, with only the song ID
+	TagInfos(struct songInfos songTagInfos, struct audioProperties songAudioProperties);
 	~TagInfos();
 
 	// Accessors //
@@ -107,6 +91,9 @@ public:
 	static bool getSongInfosById(sqlite3* db, int songId, struct songInfos* infos) ;
 	static bool getAudioPropertiesById(sqlite3* db, int songId, struct audioProperties* infos);
 
+		// Additionnals functions (search) //
+	static std::vector<TagInfos> searchTagInfos(sqlite3* db, struct songInfos searchRequirements, struct audioProperties songProperties={});	/*TODO : Make a search in the db using all the informations given in the songInfos structure, all void fields will be ignored (==0 or =="" for std::string) */
+		// NOTE : using the LIKE word instead of = with SELECT, and % to continue and _ to replace a single character --> http://sql.sh/cours/where/like
 
 private:
 	// Database tags fields
