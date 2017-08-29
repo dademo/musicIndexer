@@ -47,7 +47,7 @@ int main (int argc, char* argv[])
 		{
 			//std::cout << it->toString() << std::endl;
 			std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
-			//it->sync(db);
+			it->sync(db);
 		}
 
 		struct songInfos dataInfos = genVoidStructSongInfos();
@@ -71,6 +71,14 @@ int main (int argc, char* argv[])
 		for(std::vector<TagInfos>::iterator it = allResults2.begin(); it != allResults2.end(); it++)
 		{
 			std::cout << (*it).toString() << std::endl;
+		}
+
+		struct songInfos toSearch = genVoidStructSongInfos();
+		toSearch.name="C%";
+		std::vector<TagInfos> allResults3 = TagInfos::searchTagInfos(db, toSearch, genVoidStructAudioProperties());
+		for(std::vector<TagInfos>::iterator it = allResults3.begin(); it != allResults3.end(); it++)
+		{
+			std::cout << (*it).getData().name << std::endl;
 		}
 		//TagInfos(db, 2).delDataFromDb(db);
 		/*struct songInfos data;
