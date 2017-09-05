@@ -50,7 +50,7 @@ int main (int argc, char* argv[])
 		{
 			//std::cout << it->toString() << std::endl;
 			std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
-			//it->sync(db);
+			it->sync(db);
 		}
 
 		struct songInfos dataInfos = genVoidStructSongInfos();
