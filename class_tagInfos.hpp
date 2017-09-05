@@ -29,6 +29,7 @@ struct audioProperties {
 	int bitrate;	// kb/s
 	int samplerate;	// Hz
 	int channels;
+	float bpm;
 };
 
 // Class that store all values from the database. It can check and update it if necessary
@@ -117,5 +118,6 @@ private:
 	int		m_audioProperties_bitrate	= 0;
 	int		m_audioProperties_samplerate	= 0;
 	int		m_audioProperties_channels	= 0;
+	float		m_audioProperties_bpm		= 0;
 };
 #endif
