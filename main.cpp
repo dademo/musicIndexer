@@ -6,6 +6,9 @@
 // TEMP //
 #include <unistd.h>
 
+// AUBIO FCTS //
+#include "aubiofcts.hpp"
+
 #include "sqlite3.h"
 #include "music_sqlTables.hpp"
 #include "fileManip.hpp"
@@ -47,7 +50,7 @@ int main (int argc, char* argv[])
 		{
 			//std::cout << it->toString() << std::endl;
 			std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
-			it->sync(db);
+			//it->sync(db);
 		}
 
 		struct songInfos dataInfos = genVoidStructSongInfos();
@@ -87,6 +90,8 @@ int main (int argc, char* argv[])
 
 
 		//maMusique.sync(db);
+		//
+		std::cout << "BPM of [ /home/dademo/Musique/Fichiers wave/Comancero-I don't want let you down-1988-120.wav ] : " << getBPM("/home/dademo/Musique/Fichiers wave/Comancero-I don't want let you down-1988-120.wav") << std::endl;
 
 		sqlite3_close(db);
 
