@@ -40,8 +40,7 @@ CREATE TABLE IF NOT EXISTS \"albums\" (\n\
 	`path`		TEXT	/*Name of the file*/,\n\
 	`name`		TEXT	/*Name of the track*/,\n\
 	`tracknbr`	INTEGER	/*Number of tracks*/,\n\
-	`comment`	TEXT	/*Comment of the track*/,\n\
-	`bpm`		REAL	/*BPM of the track (tag or calculated)*/\n\
+	`comment`	TEXT	/*Comment of the track*/\n\
 );",
 "CREATE TABLE IF NOT EXISTS \"audioProperties\" (\n\
 	`id`		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,\n\
@@ -49,7 +48,8 @@ CREATE TABLE IF NOT EXISTS \"albums\" (\n\
 	`length`	INTEGER	/*Length of the music in seconds*/,\n\
 	`bitrate`	INTEGER	/*Bitrate in kb/s*/,\n\
 	`sampleRate`	INTEGER	/*Sample rate in Hz*/,\n\
-	`channels`	INTEGER	/*Number of audio channels*/\n\
+	`channels`	INTEGER	/*Number of audio channels*/,\n\
+	`bpm`		REAL	/*BPM of the track (tag or calculated)*/\n\
 );" };
 
 	for(int i = 0; i < 6; i++)
@@ -118,15 +118,15 @@ void checkTables(sqlite3* db)
 		{"path", SQLITE_TEXT,false},
 		{"name", SQLITE_TEXT, false},
 		{"tracknbr", SQLITE_INTEGER, false},
-		{"comment", SQLITE_TEXT, false},
-		{"bpm", SQLITE_FLOAT, false}
+		{"comment", SQLITE_TEXT, false}
 	},{
 		{"id", SQLITE_INTEGER, true },
 		{"id_song", SQLITE_INTEGER, false },
 		{"length", SQLITE_INTEGER, false },
 		{"bitrate", SQLITE_INTEGER, false },
 		{"sampleRate", SQLITE_INTEGER, false },
-		{"channels", SQLITE_INTEGER, false }
+		{"channels", SQLITE_INTEGER, false },
+		{"bpm", SQLITE_FLOAT, false}
 	}};
 
 	std::string allTablesNames[] = {
@@ -137,7 +137,7 @@ void checkTables(sqlite3* db)
 	"songs",
 	"audioProperties"
 	};
-	int elemCount[] = {5,2,2,2,10,6};
+	int elemCount[] = {5,2,2,2,9,7};
 
 	for(int i = 0; i < 6; i++)
 	{
