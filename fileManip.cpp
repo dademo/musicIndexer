@@ -26,6 +26,7 @@ std::vector<std::string> getFileList(std::string path, bool recursive)
 			{
 				if(!isDir(path + "/" + currentFile->d_name))
 				{
+					//std::cout << "Not a dir : " << path + "/" + currentFile->d_name << std::endl;
 					bool ok = false;
 					std::string extension = getFileLastExtension(currentFile->d_name);
 					for(int i=0; i < 18; i++)
