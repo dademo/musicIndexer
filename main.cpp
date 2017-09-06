@@ -23,7 +23,8 @@ int callbackFct(void* db, int ncols, char** stringResults, char** colsNames);
 
 int main (int argc, char* argv[])
 {
-	std::string origPath = "/home/dademo/Musique";
+	//std::string origPath = "/home/dademo/Musique";
+	std::string origPath = "/home/dademo/Music";
 	//std::string origPath = "/home/dademo/Musique/Daft.Punk.Discographie.FLAC-NoTag";
 	sqlite3 *db;
 	int rc;
@@ -42,6 +43,8 @@ int main (int argc, char* argv[])
 
 		checkTables(db);
 
+		std::vector<std::string> allMyFiles = getFileList(origPath, true);
+
 
 		//std::vector<TagInfos> allMyTags = fullGetAllTags(origPath);
 		std::vector<TagInfos> allMyTags = fastGetAllTags(origPath);
@@ -49,8 +52,8 @@ int main (int argc, char* argv[])
 		for(std::vector<TagInfos>::iterator it = allMyTags.begin(); it != allMyTags.end(); it++)
 		{
 			//std::cout << it->toString() << std::endl;
-			//std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
-			//it->sync(db);
+			std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
+			it->sync(db);
 		}
 
 		struct songInfos dataInfos = genVoidStructSongInfos();
