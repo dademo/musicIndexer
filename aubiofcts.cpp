@@ -14,7 +14,7 @@ float getBPM(std::string songPath)
 	uint_t win_size = 1024;	// 1ko
 	uint_t hop_size = win_size / 4;
 
-	aubio_source_t* aubiosource = new_aubio_source(songPath.c_str(), 0, hop_size);
+	aubio_source_t* aubiosource = new_aubio_source((char*)songPath.c_str(), 0, hop_size);
 		if(!aubiosource) { return -1; }
 	uint_t samplerate = aubio_source_get_samplerate(aubiosource);
 	uint_t nFrames = 0, read = 0;
@@ -22,7 +22,7 @@ float getBPM(std::string songPath)
 	fvec_t* in = new_fvec(hop_size);	// Input buffer
 	fvec_t* out = new_fvec(1);		// Output buffer
 
-	aubio_tempo_t* aubiotempo = new_aubio_tempo("default", win_size, hop_size, samplerate);
+	aubio_tempo_t* aubiotempo = new_aubio_tempo((char*)"default", win_size, hop_size, samplerate);
 
 	std::vector<smpl_t> allBPM;
 	float bpm = 0;
