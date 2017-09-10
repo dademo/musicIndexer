@@ -55,9 +55,7 @@ int main (int argc, char* argv[])
 		for(std::vector<TagInfos>::iterator it = allMyTags.begin(); it != allMyTags.end(); it++)
 		{
 			//std::cout << it->toString() << std::endl;
-<<<<<<< HEAD
 			//std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
->>>>>>> async
 			it->sync(db);
 		}
 /*
@@ -88,7 +86,6 @@ int main (int argc, char* argv[])
 		std::vector<TagInfos> allResults2 = TagInfos::searchTagInfos(db, allResults[0].getData(), dataProperties);
 		for(std::vector<TagInfos>::iterator it = allResults2.begin(); it != allResults2.end(); it++)
 		{
-<<<<<<< HEAD
 			std::cout << it->toString() << std::endl;
 		}
 
@@ -98,11 +95,8 @@ int main (int argc, char* argv[])
 		for(std::vector<TagInfos>::iterator it = allResults3.begin(); it != allResults3.end(); it++)
 		{
 			std::cout << it->getData().name << std::endl;
-		}
-=======
-			std::cout << (*it).toString() << std::endl;
 		}*/
->>>>>>> async
+
 		//TagInfos(db, 2).delDataFromDb(db);
 		/*struct songInfos data;
 
