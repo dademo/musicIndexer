@@ -1,5 +1,5 @@
-#ifndef CLASS_TAGINFOS
-#define CLASS_TAGINFOS
+#ifndef CLASS_TAGINFOS_HPP
+#define CLASS_TAGINFOS_HPP
 
 #include "sqlite3.h"
 #include <taglib/taglib.h>
@@ -29,6 +29,7 @@ struct audioProperties {
 	int bitrate;	// kb/s
 	int samplerate;	// Hz
 	int channels;
+	float bpm;
 };
 
 // Class that store all values from the database. It can check and update it if necessary
@@ -39,43 +40,43 @@ public:
 	TagInfos(std::string path) : TagInfos(TagLib::FileRef(path.c_str(), TagLib::AudioProperties::Average)) {}
 	TagInfos(sqlite3* db, int songDbId);	// Creating an object from the DB, with only the song ID
 	TagInfos(struct songInfos songTagInfos, struct audioProperties songAudioProperties);
-	~TagInfos();
+	virtual ~TagInfos();
 
 	// Accessors //
-	struct songInfos getData();
-	struct audioProperties getAudioProperties();
-	std::string getDir()		{ return m_directories_path; }
-	std::string getFileName()	{ return m_songs_path; }
+	virtual struct songInfos getData();
+	virtual struct audioProperties getAudioProperties();
+	virtual std::string getDir()		{ return m_directories_path; }
+	virtual std::string getFileName()	{ return m_songs_path; }
 
 	// Special functions //
-	bool sync(sqlite3* db);				// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
+	virtual bool sync(sqlite3* db);				// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
 	// Insertion functions //
-	bool insertAlbum(sqlite3* db);			// Adding the albums_name,albums_artists_name(int),albums_ntracks,albums_year to the database
+	virtual bool insertAlbum(sqlite3* db);			// Adding the albums_name,albums_artists_name(int),albums_ntracks,albums_year to the database
 	bool insertSongArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
-	bool insertAlbumArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
-	bool insertAudioProperties(sqlite3* db);	// Adding the audio properties to the database
-	bool insertDirPath(sqlite3* db);		// Adding the directories_path to the database
-	bool insertGenre(sqlite3* db);			// Adding the genre to thje database
-	bool insertSong(sqlite3* db);			// Adding the songs to the database -> If compareSongPath return false
-	bool updateSong(sqlite3* db);	/*TODO*/	// Updating the song, if already exists but doesn't fit with the acutal datas
-	std::string toString();
+	virtual bool insertAlbumArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
+	virtual bool insertAudioProperties(sqlite3* db);	// Adding the audio properties to the database
+	virtual bool insertDirPath(sqlite3* db);		// Adding the directories_path to the database
+	virtual bool insertGenre(sqlite3* db);			// Adding the genre to thje database
+	virtual bool insertSong(sqlite3* db);			// Adding the songs to the database -> If compareSongPath return false
+	virtual bool updateSong(sqlite3* db);	/*TODO*/	// Updating the song, if already exists but doesn't fit with the acutal datas
+	virtual std::string toString();
 
 	// Comaprison functions
-	bool compareAlbum(sqlite3* db);			// If the album exists in the database
-	bool compareSongArtist(sqlite3* db);		// If the artist (album and song) exists in the databse
-	bool compareAlbumArtist(sqlite3* db);		// If the artist (album and song) exists in the databse
-	bool compareGenre(sqlite3* db);			// If the genre exist in the database
-	bool compareDirPath(sqlite3* db);		// Checking if the directory path exists in the database
-	bool compareSongPath(sqlite3* db);		// Checking if the file name exists in the database
-	bool compareSongData(sqlite3* db);		// If the song exist in the database with the same data
-	bool compareAudioProperties(sqlite3* db);	// Check for the presence of an audioProperty in the database
+	virtual bool compareAlbum(sqlite3* db);			// If the album exists in the database
+	virtual bool compareSongArtist(sqlite3* db);		// If the artist (album and song) exists in the databse
+	virtual bool compareAlbumArtist(sqlite3* db);		// If the artist (album and song) exists in the databse
+	virtual bool compareGenre(sqlite3* db);			// If the genre exist in the database
+	virtual bool compareDirPath(sqlite3* db);		// Checking if the directory path exists in the database
+	virtual bool compareSongPath(sqlite3* db);		// Checking if the file name exists in the database
+	virtual bool compareSongData(sqlite3* db);		// If the song exist in the database with the same data
+	virtual bool compareAudioProperties(sqlite3* db);	// Check for the presence of an audioProperty in the database
 	// Deletion functions
-	void delDataFromDb(sqlite3* db);		// Generic function to delete data from the db. Also check if the linked data have another reference, or they will be deleted
-	void delAlbumArtistFromDb(sqlite3* db);		// Deleting the current album artist from the db
-	void delSongArtistFromDb(sqlite3* db);		// Deleting the current song artist from the db
-	void delAlbumFromDb(sqlite3* db);		// Deleting the current album from the db
-	void delAudioPropertiesFromDb(sqlite3* db);	// Deleting the associated audio properties from the db
-	void delSongFromDb(sqlite3* db);		// Deleting the current song from the db (last function to bez called)
+	virtual void delDataFromDb(sqlite3* db);		// Generic function to delete data from the db. Also check if the linked data have another reference, or they will be deleted
+	virtual void delAlbumArtistFromDb(sqlite3* db);		// Deleting the current album artist from the db
+	virtual void delSongArtistFromDb(sqlite3* db);		// Deleting the current song artist from the db
+	virtual void delAlbumFromDb(sqlite3* db);		// Deleting the current album from the db
+	virtual void delAudioPropertiesFromDb(sqlite3* db);	// Deleting the associated audio properties from the db
+	virtual void delSongFromDb(sqlite3* db);		// Deleting the current song from the db (last function to bez called)
 	// Deleting the current audio properties from the db
 
 	// Static functions //
@@ -95,7 +96,7 @@ public:
 	static std::vector<TagInfos> searchTagInfos(sqlite3* db, struct songInfos searchRequirements, struct audioProperties songProperties={});	/*Make a search in the db using all the informations given in the songInfos structure, all void fields will be ignored (==0 or =="" for std::string) */
 		// NOTE : using the LIKE word instead of = with SELECT, and % to continue and _ to replace a single character --> http://sql.sh/cours/where/like
 
-private:
+protected:
 	// Database tags fields
 		// albums table
 	std::string	m_albums_name			= "";	// artists table
@@ -117,5 +118,6 @@ private:
 	int		m_audioProperties_bitrate	= 0;
 	int		m_audioProperties_samplerate	= 0;
 	int		m_audioProperties_channels	= 0;
+	float		m_audioProperties_bpm		= 0;
 };
 #endif

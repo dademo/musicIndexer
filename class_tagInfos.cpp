@@ -39,7 +39,13 @@ TagInfos::TagInfos(TagLib::FileRef targetFile)
 			if( it->first == "ARTIST" ) { m_songs_artists_name = it->second.toString().to8Bit(true); }
 			if( it->first == "TRACKNUMBER" ) { m_songs_tracknbr = std::stoi(it->second.toString().to8Bit(true)); }
 			if( it->first == "COMMENT" ) { m_songs_comment = it->second.toString().to8Bit(true); }
+			//if( it->first == "COMMENT" ) { m_songs_comment = it->second.toString().to8Bit(true); }
 			//std::cout << it->first << " <> " << it->second << std::endl;
+			try {
+				if( it->first == "COMMENT" ) { m_songs_comment = it->second.toString().to8Bit(true); }
+			} catch (std::logic_error* e) {
+				std::cerr << "TagInfos::TagInfos(TagLib::FileRead targetFile) -> TAG::COMMENT : Error\n\t->" << e->what() << std::endl;
+			}
 		}
 
 		TagLib::AudioProperties* audioProperties = targetFile.audioProperties();
@@ -65,7 +71,8 @@ TagInfos::TagInfos(sqlite3* db, int songDbId) :
 	m_audioProperties_length(0),
 	m_audioProperties_bitrate(0),
 	m_audioProperties_samplerate(0),
-	m_audioProperties_channels(0)
+	m_audioProperties_channels(0),
+	m_audioProperties_bpm(0)
 {
 	struct songInfos data;
 	struct audioProperties dataAudioProperties;
@@ -89,6 +96,7 @@ TagInfos::TagInfos(sqlite3* db, int songDbId) :
 			m_audioProperties_bitrate	= dataAudioProperties.bitrate;
 			m_audioProperties_samplerate	= dataAudioProperties.samplerate;
 			m_audioProperties_channels	= dataAudioProperties.channels;
+			m_audioProperties_bpm		= dataAudioProperties.bpm;
 		}
 		else
 		{
@@ -116,7 +124,8 @@ TagInfos::TagInfos(struct songInfos songTagInfos, struct audioProperties songAud
 	m_audioProperties_length	(songAudioProperties.length),
 	m_audioProperties_bitrate	(songAudioProperties.bitrate),
 	m_audioProperties_samplerate	(songAudioProperties.samplerate),
-	m_audioProperties_channels	(songAudioProperties.channels)
+	m_audioProperties_channels	(songAudioProperties.channels),
+	m_audioProperties_bpm		(songAudioProperties.bpm)
 {
 	
 }
@@ -154,6 +163,7 @@ struct audioProperties TagInfos::getAudioProperties()
 	toReturn.bitrate = m_audioProperties_bitrate;
 	toReturn.samplerate = m_audioProperties_samplerate;
 	toReturn.channels = m_audioProperties_channels;
+	toReturn.bpm = m_audioProperties_bpm;
 
 	return toReturn;
 }
@@ -171,6 +181,7 @@ std::string TagInfos::toString()
 	toReturn += "\tDate : " + m_albums_year + "\n";
 	toReturn += "\tComment : " + m_songs_comment + "\n";
 	toReturn += "\tPath : " +  m_directories_path + "/" + m_songs_path + "\n";
+	toReturn += "\tBPM : " +  std::to_string(m_audioProperties_bpm) + "\n";
 	toReturn += "\t" + std::to_string(m_audioProperties_length) + " s | " + std::to_string(m_audioProperties_bitrate) + " kb/s | " + std::to_string(m_audioProperties_samplerate) + " Hz | " + std::to_string(m_audioProperties_channels) + " channels\n";
 
 	return toReturn;
@@ -285,15 +296,16 @@ bool TagInfos::insertAudioProperties(sqlite3* db)
 	int returnVal = 0;
 
 	//returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO audioProperties(id_song,length,bitrate,sampleRate,channels) VALUES (?,?,?,?,?)", -1, &requestStatement, 0), 0);
-	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "INSERT INTO audioProperties(id_song,length,bitrate,sampleRate,channels) VALUES (?,?,?,?,?)", -1, &requestStatement, 0));
+	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "INSERT INTO audioProperties(id_song,length,bitrate,sampleRate,channels,bpm) VALUES (?,?,?,?,?,?)", -1, &requestStatement, 0));
 
 	if(returnVal != SQLITE_OK) { return false; }
 
 	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 1, TagInfos::getSongId(db, m_directories_path, m_songs_path))) != SQLITE_OK) { return false; };
-	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 2, m_audioProperties_length)) != SQLITE_OK) { return false; };
-	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 3, m_audioProperties_bitrate)) != SQLITE_OK) { return false; };
-	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 4, m_audioProperties_samplerate)) != SQLITE_OK) { return false; };
-	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 5, m_audioProperties_channels)) != SQLITE_OK) { return false; };
+	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 2, m_audioProperties_length)) != SQLITE_OK) { return false; }
+	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 3, m_audioProperties_bitrate)) != SQLITE_OK) { return false; }
+	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 4, m_audioProperties_samplerate)) != SQLITE_OK) { return false; }
+	if(sqliteReturnVal(sqlite3_bind_int(requestStatement, 5, m_audioProperties_channels)) != SQLITE_OK) { return false; }
+	if(sqliteReturnVal(sqlite3_bind_double(requestStatement, 6, m_audioProperties_bpm)) != SQLITE_OK) { return false; }
 
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
@@ -955,12 +967,13 @@ bool TagInfos::getAudioPropertiesById(sqlite3* db, int songId, struct audioPrope
 	infos->bitrate=0;
 	infos->samplerate=0;
 	infos->channels=0;
+	infos->bpm=0;
 
 	sqlite3_stmt* requestStatement;
 	int returnVal = 0;
 
 	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
-	SELECT audioProperties.length, audioProperties.bitrate, audioProperties.sampleRate, audioProperties.channels \
+	SELECT audioProperties.length, audioProperties.bitrate, audioProperties.sampleRate, audioProperties.channels, audioProperties.bpm \
 	FROM audioProperties \
 	WHERE audioProperties.id_song=?", -1, &requestStatement, 0));
 
@@ -977,6 +990,7 @@ bool TagInfos::getAudioPropertiesById(sqlite3* db, int songId, struct audioPrope
 			infos->bitrate = sqlite3_column_int(requestStatement, 1);
 			infos->samplerate = sqlite3_column_int(requestStatement, 2);
 			infos->channels = sqlite3_column_int(requestStatement, 3);
+			infos->bpm = float(sqlite3_column_double(requestStatement, 4));
 		}
 		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
 

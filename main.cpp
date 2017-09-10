@@ -12,6 +12,7 @@
 #include "fct_utiles.hpp"
 #include "tagfcts.hpp"
 #include "class_tagInfos.hpp"
+#include "class_asyncTagInfos.hpp"
 
 #define DBNAME "/tmp/music.db"
 
@@ -25,6 +26,13 @@ int main (int argc, char* argv[])
 	sqlite3 *db;
 	int rc;
 	//char* err;
+
+	// Configuring the  sqlite3 library for serialized mode -> multithreading with the same db connexion : https://sqlite.org/threadsafe.html
+	rc = sqlite3_config(SQLITE_CONFIG_SERIALIZED);
+	if( rc ){
+		fprintf(stderr, "Can't configure SQLITE3 library: %s\n", sqlite3_errstr(rc));
+		return 1;
+	}
 
 	rc = sqlite3_open(DBNAME, &db);
 	if( rc ){
@@ -41,16 +49,26 @@ int main (int argc, char* argv[])
 
 
 		//std::vector<TagInfos> allMyTags = fullGetAllTags(origPath);
+
 		std::vector<TagInfos> allMyTags = fastGetAllTags(origPath);
 		
 		for(std::vector<TagInfos>::iterator it = allMyTags.begin(); it != allMyTags.end(); it++)
 		{
 			//std::cout << it->toString() << std::endl;
-			std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
+<<<<<<< HEAD
+			//std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
+>>>>>>> async
 			it->sync(db);
 		}
+/*
+		std::vector<ASyncTagInfos> allMyTags = fastGetAllTags_ASync(origPath);
+		for(std::vector<ASyncTagInfos>::iterator it = allMyTags.begin(); it != allMyTags.end(); it++)
+		{
+			it->sync(db);
+		}
+*/
 
-		struct songInfos dataInfos = genVoidStructSongInfos();
+/*		struct songInfos dataInfos = genVoidStructSongInfos();
 
 		dataInfos.name="Contact";
 		dataInfos.artist="Daft Punk";
@@ -70,6 +88,7 @@ int main (int argc, char* argv[])
 		std::vector<TagInfos> allResults2 = TagInfos::searchTagInfos(db, allResults[0].getData(), dataProperties);
 		for(std::vector<TagInfos>::iterator it = allResults2.begin(); it != allResults2.end(); it++)
 		{
+<<<<<<< HEAD
 			std::cout << it->toString() << std::endl;
 		}
 
@@ -80,6 +99,10 @@ int main (int argc, char* argv[])
 		{
 			std::cout << it->getData().name << std::endl;
 		}
+=======
+			std::cout << (*it).toString() << std::endl;
+		}*/
+>>>>>>> async
 		//TagInfos(db, 2).delDataFromDb(db);
 		/*struct songInfos data;
 
@@ -88,6 +111,14 @@ int main (int argc, char* argv[])
 
 		//maMusique.sync(db);
 
+		//ASyncTagInfos myTest(allMyTags[0]);
+		/*
+		ASyncTagInfos myTest("/home/dademo/Musique/Albums/AC-DC/Back In Black/01 Hells Bells.mp3");
+
+		std::cout << myTest.sync(db) << std::endl;
+		std::cout << "Waiting for myTest.sync()" << std::endl;
+		myTest.join();
+*/
 		sqlite3_close(db);
 
 		return 0;
