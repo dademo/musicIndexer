@@ -44,3 +44,27 @@ std::vector<TagInfos> fullGetAllTags(std::string basePath, bool recursive)
 
 	return allMyTags;
 }
+
+std::vector<ASyncTagInfos> fastGetAllTags_ASync(std::string basePath, bool recursive)
+{
+	std::vector<TagInfos> allMyTags = fastGetAllTags(basePath, recursive);
+	std::vector<ASyncTagInfos> finalAllMytags;
+
+	for(std::vector<TagInfos>::iterator it = allMyTags.begin(); it != allMyTags.end(); it++)
+	{
+		finalAllMytags.push_back(ASyncTagInfos(*it));
+	}
+	return finalAllMytags;
+}
+
+std::vector<ASyncTagInfos> fullGetAllTags_ASync(std::string basePath, bool recursive)
+{
+	std::vector<TagInfos> allMyTags = fullGetAllTags(basePath, recursive);
+	std::vector<ASyncTagInfos> finalAllMytags;
+
+	for(std::vector<TagInfos>::iterator it = allMyTags.begin(); it != allMyTags.end(); it++)
+	{
+		finalAllMytags.push_back(ASyncTagInfos(*it));
+	}
+	return finalAllMytags;
+}
