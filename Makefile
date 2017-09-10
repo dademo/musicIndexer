@@ -10,7 +10,7 @@ EXEC=musicIndexer
 RED	=	"\e[1;31m"
 WHITE	=	"\e[0m"
 
-SRC=main.cpp sqlite3.cpp mySQLiteFunctions.cpp music_sqlTables.cpp fileManip.cpp tagfcts.cpp class_tagInfos.cpp fct_utiles.cpp
+SRC=main.cpp sqlite3.cpp mySQLiteFunctions.cpp music_sqlTables.cpp fileManip.cpp tagfcts.cpp class_tagInfos.cpp fct_utiles.cpp class_asyncTagInfos.cpp
 OBJ=$(SRC:.cpp=.o) $(CRC:.c=.o)
 
 all: $(EXEC)
