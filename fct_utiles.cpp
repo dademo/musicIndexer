@@ -9,6 +9,7 @@ void clearLine(int nChar)
 	{
 		std::cout << ' ';
 	}
+	std::cout << '\r';
 }
 
 struct songInfos genVoidStructSongInfos()
