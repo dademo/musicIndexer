@@ -2,11 +2,10 @@
 #include <map>
 #include <vector>
 #include <stdlib.h>	// atoi()
+#include <signal.h>
+#include <sys/wait.h>
 
-// TEMP //
-#include <unistd.h>
-
-// AUBIO FCTS //
+#include "config.hpp"
 #include "aubiofcts.hpp"
 
 #include "sqlite3.h"
@@ -18,13 +17,19 @@
 
 #define DBNAME "/tmp/music.db"
 
+//std::vector<pid_t> g_allChilds;
 
 int callbackFct(void* db, int ncols, char** stringResults, char** colsNames);
+void onSigIntSignal(int signalId);
 
 int main (int argc, char* argv[])
 {
-	//std::string origPath = "/home/dademo/Musique";
-	std::string origPath = "/home/dademo/Music";
+	// Joining signals
+	//signal(SIGINT, onSigIntSignal);
+
+	std::string origPath = "/home/dademo/Musique";
+	//std::string origPath = "/tmp/music";
+	//std::string origPath = "/home/dademo/Music";
 	//std::string origPath = "/home/dademo/Musique/Daft.Punk.Discographie.FLAC-NoTag";
 	sqlite3 *db;
 	int rc;
@@ -49,10 +54,14 @@ int main (int argc, char* argv[])
 		//std::vector<TagInfos> allMyTags = fullGetAllTags(origPath);
 		std::vector<TagInfos> allMyTags = fastGetAllTags(origPath);
 		
+		TagInfos::aSync_getAllBPM(allMyTags, 8);
+
 		for(std::vector<TagInfos>::iterator it = allMyTags.begin(); it != allMyTags.end(); it++)
 		{
 			//std::cout << it->toString() << std::endl;
-			std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
+			//std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
+			//it->getBPM();
+			//std::cout << it->toString() << std::endl;
 			it->sync(db);
 		}
 
@@ -70,13 +79,13 @@ int main (int argc, char* argv[])
 
 		for(std::vector<TagInfos>::iterator it = allResults.begin(); it != allResults.end(); it++)
 		{
-			std::cout << it->toString() << std::endl;
+			//std::cout << it->toString() << std::endl;
 		}
 
 		std::vector<TagInfos> allResults2 = TagInfos::searchTagInfos(db, allResults[0].getData(), dataProperties);
 		for(std::vector<TagInfos>::iterator it = allResults2.begin(); it != allResults2.end(); it++)
 		{
-			std::cout << it->toString() << std::endl;
+			//std::cout << it->toString() << std::endl;
 		}
 
 		struct songInfos toSearch = genVoidStructSongInfos();
@@ -84,7 +93,7 @@ int main (int argc, char* argv[])
 		std::vector<TagInfos> allResults3 = TagInfos::searchTagInfos(db, toSearch, genVoidStructAudioProperties());
 		for(std::vector<TagInfos>::iterator it = allResults3.begin(); it != allResults3.end(); it++)
 		{
-			std::cout << it->getData().name << std::endl;
+			//std::cout << it->getData().name << std::endl;
 		}
 
 
@@ -96,7 +105,7 @@ int main (int argc, char* argv[])
 
 		//maMusique.sync(db);
 		//
-		std::cout << "BPM of [ /home/dademo/Musique/Fichiers wave/Comancero-I don't want let you down-1988-120.wav ] : " << getBPM("/home/dademo/Musique/Fichiers wave/Comancero-I don't want let you down-1988-120.wav") << std::endl;
+		//std::cout << "BPM of [ /home/dademo/Musique/Fichiers wave/Comancero-I don't want let you down-1988-120.wav ] : " << getBPM("/home/dademo/Musique/Fichiers wave/Comancero-I don't want let you down-1988-120.wav") << std::endl;
 
 		sqlite3_close(db);
 
@@ -121,3 +130,14 @@ int callbackFct(void* listIds, int ncols, char** stringResults, char** colsNames
 	return 0;
 }
 
+/*void onSigIntSignal(int signalId)
+{
+//	for(std::vector<pid_t>::iterator it = g_allChilds.begin(); it != g_allChilds.end(); it++)
+//	{ kill(*it, SIGINT); }
+
+	int opt(0);
+	std::cerr << "Received SIGINT : " << signalId << std::endl;
+	// Waiting for all childs
+	while (wait(&opt) > 0) { std::cerr << "Waiting for childs..." << std::endl; }
+	exit(0);
+}*/
