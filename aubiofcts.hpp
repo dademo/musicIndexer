@@ -3,6 +3,6 @@
 
 #include <string>
 
-float getBPM(std::string songPath);
+float getBPMFromFile(std::string songPath);
 
 #endif

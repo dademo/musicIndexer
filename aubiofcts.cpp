@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <mutex>
 #include <aubio/aubio.h>
 
 #include "aubiofcts.hpp"
@@ -8,14 +10,14 @@
  * FROM : https://aubio.org/doc/latest/tempo_2test-tempo_8c-example.html
  */
 
-float getBPM(std::string songPath)
+float getBPMFromFile(std::string songPath)
 {
 	//uint_t win_size = 10240;	// 10ko
 	uint_t win_size = 1024;	// 1ko
 	uint_t hop_size = win_size / 4;
 
 	aubio_source_t* aubiosource = new_aubio_source((char*)songPath.c_str(), 0, hop_size);
-		if(!aubiosource) { return -1; }
+		if(!aubiosource) { std::cerr << "Problem with song at : " << songPath << std::endl; return -1; }
 	uint_t samplerate = aubio_source_get_samplerate(aubiosource);
 	uint_t nFrames = 0, read = 0;
 
