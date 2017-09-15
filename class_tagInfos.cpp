@@ -1,12 +1,18 @@
-#include <unistd.h>	// sleep()
+//#include <unistd.h>	// sleep()
+#include <thread>
+#include <chrono>
+#include <unistd.h>
+#include <sys/wait.h>
+
 #include "sqlite3.h"
 #include <taglib/taglib.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
-#include <taglib/oggflacfile.h>
 
+#include "fct_utiles.hpp"
 #include "fileManip.hpp"
 #include "mySQLiteFunctions.hpp"
+#include "aubiofcts.hpp"
 #include "class_tagInfos.hpp"
 
 
@@ -231,7 +237,7 @@ bool TagInfos::insertAlbum(sqlite3* db)
 		do{
 			returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 			if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return false; }
-			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1));/*sleep(1);*/ }
 
 		} while (returnVal != SQLITE_DONE);
 
@@ -255,7 +261,7 @@ bool TagInfos::insertSongArtist(sqlite3* db)
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return false; }
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -276,7 +282,7 @@ bool TagInfos::insertAlbumArtist(sqlite3* db)
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return false; }
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -305,7 +311,7 @@ bool TagInfos::insertAudioProperties(sqlite3* db)
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return false; }
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -327,7 +333,7 @@ bool TagInfos::insertDirPath(sqlite3* db)
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return false; }
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -350,7 +356,7 @@ bool TagInfos::insertGenre(sqlite3* db)
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return false; }
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -383,7 +389,7 @@ bool TagInfos::insertSong(sqlite3* db)
 		do{
 			returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 			if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return false; }
-			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 		} while (returnVal != SQLITE_DONE);
 
@@ -420,7 +426,7 @@ bool TagInfos::updateSong(sqlite3* db)
 		do{
 			returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 			if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return false; }
-			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 		} while (returnVal != SQLITE_DONE);
 
@@ -453,7 +459,7 @@ WHERE albums.name=? AND artists.name=? AND albums.ntracks=? AND albums.year=? AN
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return -1; }
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 		if(returnVal == SQLITE_ROW)
 		{
 			id = sqlite3_column_int(requestStatement,0);
@@ -500,7 +506,7 @@ int TagInfos::getSongId(sqlite3* db, std::string dirPath, std::string songFileNa
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return -1; }
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 		if(returnVal == SQLITE_ROW)
 		{
 			//std::cout << "Song Id : " << sqlite3_column_int(requestStatement, 0) << std::endl;
@@ -531,7 +537,7 @@ int TagInfos::getAudioPropertiesId(sqlite3* db, int songId)
 	do{
 		returnVal = sqliteReturnVal(sqlite3_step(requestStatement));
 		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return -1; }
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 		if(returnVal == SQLITE_ROW)
 		{
 			id = sqlite3_column_int(requestStatement,0);
@@ -615,7 +621,7 @@ bool TagInfos::compareSongArtist(sqlite3* db)	// true -> OK
 				{ return false; }
 				i++;
 			}
-			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 		} while (returnVal != SQLITE_DONE);
 
@@ -654,7 +660,7 @@ bool TagInfos::compareAlbumArtist(sqlite3* db)
 				{ std::cout << m_songs_artists_name << " <> " << sqlite3_column_text(requestStatement, 0) << std::endl; return false; }
 				i++;
 			}
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 		} while (returnVal != SQLITE_DONE);
 
@@ -693,7 +699,7 @@ bool TagInfos::compareGenre(sqlite3* db)
 				{ return false; }
 				i++;
 			}
-			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 		} while (returnVal != SQLITE_DONE);
 
@@ -731,7 +737,7 @@ bool TagInfos::compareDirPath(sqlite3* db)	// Checking if the path exists in the
 			{ return false; }
 			i++;
 		}
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -768,7 +774,7 @@ bool TagInfos::compareSongPath(sqlite3* db)	// Checking if the path exists in th
 			if(m_songs_path != std::string((char*)sqlite3_column_text(requestStatement, 1)))	{ return false; }
 			i++;
 		}
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -819,7 +825,7 @@ if(TagInfos::getArtistId(db, m_songs_artists_name) != sqlite3_column_int(request
 				if(m_songs_comment != std::string((char*)sqlite3_column_text(requestStatement, 7)))	{ std::cout << "Comment different" << std::endl; return false; }
 				i++;
 			}
-			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+			if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 		} while (returnVal != SQLITE_DONE);
 
@@ -840,7 +846,7 @@ bool TagInfos::compareAudioProperties(sqlite3* db)
 	int i = 0;
 
 	returnVal = sqliteReturnVal(sqlite3_prepare_v2(db, "\
-	SELECT audioProperties.length,audioProperties.bitrate,audioProperties.samplerate,audioProperties.channels \
+	SELECT audioProperties.length,audioProperties.bitrate,audioProperties.samplerate,audioProperties.channels,audioProperties.bpm \
 	FROM audioProperties,songs,directories \
 	WHERE songs.path=? AND directories.path=? AND audioProperties.id_song=songs.id AND songs.id_dirName=directories.id", -1, &requestStatement, 0));
 
@@ -854,13 +860,14 @@ bool TagInfos::compareAudioProperties(sqlite3* db)
 		if(returnVal != SQLITE_DONE && returnVal!= SQLITE_ROW && returnVal != SQLITE_BUSY) { return false; }
 		if(returnVal != SQLITE_DONE)
 		{
-			if(m_audioProperties_length != sqlite3_column_int(requestStatement, 0))	{ return false; }
+			if(m_audioProperties_length != sqlite3_column_int(requestStatement, 0))		{ return false; }
 			if(m_audioProperties_bitrate != sqlite3_column_int(requestStatement, 1))	{ return false; }
 			if(m_audioProperties_samplerate != sqlite3_column_int(requestStatement, 2))	{ return false; }
 			if(m_audioProperties_channels != sqlite3_column_int(requestStatement, 3))	{ return false; }
+			if(m_audioProperties_bpm != sqlite3_column_double(requestStatement, 4))		{ return false; }
 			i++;
 		}
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -904,7 +911,7 @@ bool TagInfos::getAlbumInfosById(sqlite3* db, int albumId, struct albumInfos* in
 			infos->nTracks = sqlite3_column_int(requestStatement, 2);
 			infos->year = std::string((char*) sqlite3_column_text(requestStatement, 3));
 		}
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -945,7 +952,7 @@ bool TagInfos::getSongInfosById(sqlite3* db, int songId, struct songInfos* infos
 			infos->fullPath = std::string((char*) sqlite3_column_text(requestStatement, 4)) + "/" + std::string((char*) sqlite3_column_text(requestStatement, 5));
 			albumId = sqlite3_column_int(requestStatement, 6);
 		}
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -987,7 +994,7 @@ bool TagInfos::getAudioPropertiesById(sqlite3* db, int songId, struct audioPrope
 			infos->channels = sqlite3_column_int(requestStatement, 3);
 			infos->bpm = float(sqlite3_column_double(requestStatement, 4));
 		}
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
@@ -1181,8 +1188,6 @@ std::vector<TagInfos> TagInfos::searchTagInfos(sqlite3* db, struct songInfos son
 		request += std::string(((nElems != 0)? " AND " : "" )) + "songs.id_album=(" + albumRequest + ")";
 	}
 
-	std::cout << "Request : " << std::endl << request << std::endl;
-
 
 	// Request part //
 	sqlite3_stmt* requestStatement;
@@ -1200,10 +1205,184 @@ std::vector<TagInfos> TagInfos::searchTagInfos(sqlite3* db, struct songInfos son
 		{
 			searchResults.push_back(TagInfos(db, sqlite3_column_int(requestStatement, 0)));
 		}
-		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; sleep(1); }
+		if(returnVal == SQLITE_BUSY) { std::cout << "Database busy... waiting" << std::endl; std::this_thread::sleep_for(std::chrono::seconds(1)); /*sleep(1);*/ }
 
 	} while (returnVal != SQLITE_DONE);
 
 
 	return searchResults;
+}
+
+
+void TagInfos::aSync_getAllBPM(std::vector<TagInfos>& allTagList, unsigned int nThreads)
+{
+	// Instanciation //
+	pid_t* childProcessPID = new pid_t[nThreads];
+	bool isMotherProcess(true);		// To check if we are the mother process -> fork() loop
+	int numFork(0);				// For the fork() loop, to know which fork we are
+	int** toChildPipeDesc = new int*[nThreads];	// Pipe descriptors -> mother
+	int** toMotherPipeDesc = new int*[nThreads];	// Pipe descriptors -> child
+
+		// Mother specific
+	std::thread* allThreads = new std::thread[nThreads];	// All the threads we use
+	int currentToModif(0);		// Value for the index of allTagList we use
+	std::mutex sharedMutex;		// Shared mutex, for the threads
+
+	for(unsigned int i(0); i < nThreads; i++)
+	{
+		toChildPipeDesc[i] = new int[2];
+		toMotherPipeDesc[i] = new int[2];
+		pipe(toChildPipeDesc[i]);		// 0 -> out, 1 -> in
+		pipe(toMotherPipeDesc[i]);	// 0 -> out, 1 -> in
+	}
+
+	for(unsigned int i(0); (i < nThreads && isMotherProcess); i++)
+	{
+		switch(childProcessPID[i] = fork()) {
+		case -1:	// error
+			std::cerr << "Error while creating the n°" << numFork << " process (TagInfos::aSync_getAllBPM())" << std::endl;
+			delete[] allThreads;
+			for(unsigned int i(0); i < nThreads; i++)
+			{
+				delete[] toChildPipeDesc[i];
+				delete[] toMotherPipeDesc[i];
+			}
+			delete[] toChildPipeDesc;
+			delete[] toMotherPipeDesc;
+			delete[] childProcessPID;
+			exit(-1);
+			break;
+		case 0:		// we are the child process
+			isMotherProcess = false;
+			aSync_getAllBPM_forkChild(&allTagList, toChildPipeDesc[i], toMotherPipeDesc[i]);
+			exit(0);	// No problem, exiting
+			// listening for the BPM to calculate, if == 0 -> ending the process
+			break;
+		default:	// we are the mother process -> allPID[i] == childPID
+			//g_allChilds.push_back(childProcessPID[i]);
+			break;
+		}
+		numFork++;
+	}
+
+	for(unsigned int i(0); i < nThreads; i++)
+	{
+		allThreads[i] = std::thread(TagInfos::aSync_getAllBPM_forkMother, &allTagList, &currentToModif, &sharedMutex, toChildPipeDesc[i], toMotherPipeDesc[i]);
+	}
+
+	// Joining
+	for(unsigned int i(0); i < nThreads; i++)
+	{
+		allThreads[i].join();
+	}
+	// Waiting for all child processe
+	int opt(0);
+	while(wait(&opt) > 0) { }
+
+	// Deleting datas //
+	for(unsigned int i(0); i < nThreads; i++)
+	{
+		delete[] toChildPipeDesc[i];
+		delete[] toMotherPipeDesc[i];
+	}
+	delete[] allThreads;
+	delete[] toChildPipeDesc;
+	delete[] toMotherPipeDesc;
+	delete[] childProcessPID;
+/*
+	std::thread* listThreads = new std::thread[nThreads];
+	bool* allStatus = new bool[nThreads];
+	bool* threadAlreadyLaunched = new bool[nThreads];
+	std::vector<TagInfos>::iterator currentTag = allTagList.begin();
+	int currentTagNb(0);
+	std::string progress = "";
+	//unsigned int currentThread(0);
+
+	for(unsigned int i(0); i < nThreads; i++) { allStatus[i]=false; threadAlreadyLaunched[i]=false; }	// No thread is running
+
+	if (currentTag != allTagList.end()) {	// If the tag list is not empty
+		do {
+			bool threadStarted(false);
+			for(unsigned int i(0); i < nThreads; i++)
+			{
+				if(allStatus[i] == false)	// The thread is running
+				{	std::cout << "Running thread n°" << i << std::endl;
+					try {
+
+					if (threadAlreadyLaunched[i]) { listThreads[i].join(); }
+
+					//listThreads[i] = std::thread(&TagInfos::aSync_getBPM_thread, std::ref(*currentTag), &allStatus[i]);	// Note : std::ref for passing an object by reference
+					listThreads[i] = std::thread(&TagInfos::aSync_getBPM_thread, &(*currentTag), &allStatus[i]);	// Note : std::ref for passing an object by reference
+					currentTagNb++; progress = "Getting BPM < " + std::to_string(currentTagNb) + " of " +  std::to_string(allTagList.size()) + " >";
+					currentTag++;
+					threadStarted = true;	// A thread as started -> no sleep to wait for threads end
+					threadAlreadyLaunched[i] = true;
+					} catch (std::system_error e) {
+						std::cerr << e.what() << std::endl << std::flush; }
+				}
+				if(threadStarted) { clearLine(progress.length()); std::cout << progress << std::flush; }
+				else { std::this_thread::sleep_for(std::chrono::milliseconds(100)); }	// ~ 10 loops by second
+			}
+			//if(threadStarted) { clearLine(progress.length()); std::cout << progress << std::flush; }
+			//else { std::this_thread::sleep_for(std::chrono::milliseconds(100)); }	// ~ 10 loops by second
+		} while (currentTag != allTagList.end());
+	}
+
+	for(unsigned int i(0); i < nThreads; i++)
+	{ listThreads[i].join(); }	// Joining all threads
+
+	delete[] listThreads;
+	delete[] allStatus;
+*/
+}
+
+void TagInfos::getBPM()
+{
+	m_audioProperties_bpm = getBPMFromFile(m_directories_path + '/' + m_songs_path);
+}
+
+void TagInfos::setBPM(float bpm)
+{
+	m_audioProperties_bpm = bpm;
+}
+
+void TagInfos::aSync_getAllBPM_forkMother(std::vector<TagInfos>* allTagList, int* currentToModif, std::mutex* sharedMutex, int* toChildPipe, int* toMotherPipe)	// Fork mother function -> used in std::thread
+{
+	while(*currentToModif < (int) (*allTagList).size())
+	{
+		float resultBPM(0);
+		int toModif = *currentToModif;
+		// Sending the getBPM order
+		write(toChildPipe[1], &toModif, sizeof(int));
+
+		// Increasing the value of currentToModif
+			// Getting the mutex -> 1 modification at time
+		sharedMutex->lock();
+		(*currentToModif)++;
+		sharedMutex->unlock();
+
+		read(toMotherPipe[0], &resultBPM, sizeof(float));
+		(*allTagList)[toModif].setBPM(resultBPM);
+	}
+	int end(-1);
+	write(toChildPipe[1], &end, sizeof(int));	// Sending 0 to child to end them
+}
+
+void TagInfos::aSync_getAllBPM_forkChild(std::vector<TagInfos>* allTagList, int* toChildPipe, int* toMotherPipe)
+{
+	int currentTagNum(0);
+	float bpm(0);
+	std::string progress;
+	do {
+		read(toChildPipe[0], &currentTagNum, sizeof(int));
+		if(currentTagNum >= 0) {
+
+			progress = "Getting BPM < " + std::to_string(currentTagNum) + " of " +  std::to_string((*allTagList).size()) + " >";
+			clearLine(progress.length());
+			std::cout << progress << std::flush;
+
+			bpm = getBPMFromFile((*allTagList)[currentTagNum].getDir() + '/' + (*allTagList)[currentTagNum].getFileName());
+			write(toMotherPipe[1], &bpm, sizeof(float));
+		}
+	} while (currentTagNum >= 0);
 }
