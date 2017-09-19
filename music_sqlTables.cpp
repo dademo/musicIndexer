@@ -49,11 +49,7 @@ CREATE TABLE IF NOT EXISTS \"albums\" (\n\
 	`bitrate`	INTEGER	/*Bitrate in kb/s*/,\n\
 	`sampleRate`	INTEGER	/*Sample rate in Hz*/,\n\
 	`channels`	INTEGER	/*Number of audio channels*/,\n\
-<<<<<<< HEAD
-	`bpm`		REAL	/*BPM of the track (tag or calculated)*/\
-=======
 	`bpm`		REAL	/*BPM of the track (tag or calculated)*/\n\
->>>>>>> aubiowork
 );" };
 
 	for(int i = 0; i < 6; i++)
@@ -130,11 +126,7 @@ void checkTables(sqlite3* db)
 		{"bitrate", SQLITE_INTEGER, false },
 		{"sampleRate", SQLITE_INTEGER, false },
 		{"channels", SQLITE_INTEGER, false },
-<<<<<<< HEAD
 		{"bpm", SQLITE_FLOAT, false }
-=======
-		{"bpm", SQLITE_FLOAT, false}
->>>>>>> aubiowork
 	}};
 
 	std::string allTablesNames[] = {

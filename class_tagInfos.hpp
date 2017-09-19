@@ -52,13 +52,9 @@ public:
 	virtual std::string getFileName()	{ return m_songs_path; }
 
 	// Special functions //
-<<<<<<< HEAD
 	virtual bool sync(sqlite3* db);				// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
-=======
-	bool sync(sqlite3* db);				// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
 	void getBPM();
 	void setBPM(float bpm);
->>>>>>> aubiowork
 	// Insertion functions //
 	virtual bool insertAlbum(sqlite3* db);			// Adding the albums_name,albums_artists_name(int),albums_ntracks,albums_year to the database
 	bool insertSongArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
@@ -109,12 +105,8 @@ public:
 	static void aSync_getAllBPM_forkMother(std::vector<TagInfos>* allTagList, int* currentToModif, std::mutex* sharedMutex, int* toChildPipe, int* toMotherPipe);	// Fork mother function -> used in std::thread
 	static void aSync_getAllBPM_forkChild(std::vector<TagInfos>* allTagList, int* toChildPipe, int* toMotherPipe);
 
-<<<<<<< HEAD
-protected:
-=======
 private:
 	// VARIABLES //
->>>>>>> aubiowork
 	// Database tags fields
 		// albums table
 	std::string	m_albums_name			= "";	// artists table

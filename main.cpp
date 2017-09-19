@@ -14,7 +14,6 @@
 #include "fct_utiles.hpp"
 #include "tagfcts.hpp"
 #include "class_tagInfos.hpp"
-#include "class_asyncTagInfos.hpp"
 
 #define DBNAME "/tmp/music.db"
 
@@ -69,19 +68,11 @@ int main (int argc, char* argv[])
 		{
 			//std::cout << it->toString() << std::endl;
 			//std::cout << "Sycing : "  << " [" << it->getData().album.name << "]\t" << it->getData().name<< std::endl;
-<<<<<<< HEAD
-=======
 			//it->getBPM();
 			//std::cout << it->toString() << std::endl;
->>>>>>> aubiowork
 			it->sync(db);
 		}
 /*
-		std::vector<ASyncTagInfos> allMyTags = fastGetAllTags_ASync(origPath);
-		for(std::vector<ASyncTagInfos>::iterator it = allMyTags.begin(); it != allMyTags.end(); it++)
-		{
-			it->sync(db);
-		}
 */
 
 /*		struct songInfos dataInfos = genVoidStructSongInfos();
@@ -112,14 +103,8 @@ int main (int argc, char* argv[])
 		std::vector<TagInfos> allResults3 = TagInfos::searchTagInfos(db, toSearch, genVoidStructAudioProperties());
 		for(std::vector<TagInfos>::iterator it = allResults3.begin(); it != allResults3.end(); it++)
 		{
-<<<<<<< HEAD
 			std::cout << it->getData().name << std::endl;
 		}*/
-=======
-			//std::cout << it->getData().name << std::endl;
-		}
-
->>>>>>> aubiowork
 
 		//TagInfos(db, 2).delDataFromDb(db);
 		/*struct songInfos data;
@@ -131,14 +116,6 @@ int main (int argc, char* argv[])
 		//
 		//std::cout << "BPM of [ /home/dademo/Musique/Fichiers wave/Comancero-I don't want let you down-1988-120.wav ] : " << getBPM("/home/dademo/Musique/Fichiers wave/Comancero-I don't want let you down-1988-120.wav") << std::endl;
 
-		//ASyncTagInfos myTest(allMyTags[0]);
-		/*
-		ASyncTagInfos myTest("/home/dademo/Musique/Albums/AC-DC/Back In Black/01 Hells Bells.mp3");
-
-		std::cout << myTest.sync(db) << std::endl;
-		std::cout << "Waiting for myTest.sync()" << std::endl;
-		myTest.join();
-*/
 		sqlite3_close(db);
 
 		return 0;
