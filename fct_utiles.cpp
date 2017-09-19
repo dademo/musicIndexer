@@ -9,6 +9,7 @@ void clearLine(int nChar)
 	{
 		std::cout << ' ';
 	}
+	std::cout << '\r';
 }
 
 struct songInfos genVoidStructSongInfos()
@@ -37,6 +38,7 @@ struct audioProperties genVoidStructAudioProperties()
 	toReturn.bitrate=0;
 	toReturn.samplerate=0;
 	toReturn.channels=0;
+	toReturn.bpm=0;
 
 	return toReturn;
 }

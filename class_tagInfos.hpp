@@ -1,10 +1,13 @@
 #ifndef CLASS_TAGINFOS_HPP
 #define CLASS_TAGINFOS_HPP
 
+#include "config.hpp"
+
 #include "sqlite3.h"
 #include <taglib/taglib.h>
 #include <taglib/fileref.h>
 #include <string>
+#include <mutex>
 
 // Data structures
 struct albumInfos {
@@ -49,7 +52,13 @@ public:
 	virtual std::string getFileName()	{ return m_songs_path; }
 
 	// Special functions //
+<<<<<<< HEAD
 	virtual bool sync(sqlite3* db);				// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
+=======
+	bool sync(sqlite3* db);				// Return true if a modification were done : Check all value of the original file, and updates the DB if necessarry (ex: values modified, file deltted, ...)
+	void getBPM();
+	void setBPM(float bpm);
+>>>>>>> aubiowork
 	// Insertion functions //
 	virtual bool insertAlbum(sqlite3* db);			// Adding the albums_name,albums_artists_name(int),albums_ntracks,albums_year to the database
 	bool insertSongArtist(sqlite3* db);			// Adding the songs_artists_name and albums_artists_name to the database
@@ -95,8 +104,17 @@ public:
 		// Additionnals functions (search) //
 	static std::vector<TagInfos> searchTagInfos(sqlite3* db, struct songInfos searchRequirements, struct audioProperties songProperties={});	/*Make a search in the db using all the informations given in the songInfos structure, all void fields will be ignored (==0 or =="" for std::string) */
 		// NOTE : using the LIKE word instead of = with SELECT, and % to continue and _ to replace a single character --> http://sql.sh/cours/where/like
+	static void aSync_getAllBPM(std::vector<TagInfos>& allTagList, unsigned int nThreads = DEFAULT_ASYNC_GETALLBPM_NTHREADS);
 
+	static void aSync_getAllBPM_forkMother(std::vector<TagInfos>* allTagList, int* currentToModif, std::mutex* sharedMutex, int* toChildPipe, int* toMotherPipe);	// Fork mother function -> used in std::thread
+	static void aSync_getAllBPM_forkChild(std::vector<TagInfos>* allTagList, int* toChildPipe, int* toMotherPipe);
+
+<<<<<<< HEAD
 protected:
+=======
+private:
+	// VARIABLES //
+>>>>>>> aubiowork
 	// Database tags fields
 		// albums table
 	std::string	m_albums_name			= "";	// artists table
